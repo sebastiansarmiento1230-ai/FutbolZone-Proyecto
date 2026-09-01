@@ -77,9 +77,16 @@ def delete_cancha(id: int, db: Session):
     cancha = db.query(CanchaModel).filter(CanchaModel.id == id).first()
     if not cancha:
         return api_response(False, "Cancha no encontrada", error="Not found")
-    cancha.activa = False
-    db.commit()
-    return api_response(True, "Cancha desactivada correctamente")
+    
+    tiene_reservas = db.query(ReservaModel).filter(ReservaModel.cancha_id == id).first()
+    if not tiene_reservas:
+        db.delete(cancha)
+        db.commit()
+        return api_response(True, "Cancha eliminada definitivamente de la base de datos")
+    else:
+        cancha.activa = False
+        db.commit()
+        return api_response(True, "Cancha desactivada correctamente")
 
 
 def get_disponibilidad(cancha_id: int, fecha: str, db: Session):

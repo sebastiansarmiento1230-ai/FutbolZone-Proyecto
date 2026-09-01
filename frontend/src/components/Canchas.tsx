@@ -35,10 +35,11 @@ function Canchas({ onSelectCancha }: CanchasProps) {
   const cargarCanchas = async () => {
     setCargando(true);
     try {
-      const res = await api.obtenerCanchas(false);
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+      const res = await api.obtenerCanchas(true);
+      if (res.success && Array.isArray(res.data)) {
+        const canchasActivas = res.data.filter((c: any) => c.activa !== false && c.activa !== 0 && c.activa !== "0");
         const mapa = new Map();
-        res.data.forEach((c: any) => {
+        canchasActivas.forEach((c: any) => {
           const clave = c.id || c.nombre;
           if (!mapa.has(clave)) {
             mapa.set(clave, c);
@@ -46,18 +47,10 @@ function Canchas({ onSelectCancha }: CanchasProps) {
         });
         setCanchas(Array.from(mapa.values()));
       } else {
-        setCanchas([
-          { id: 1, nombre: "Cancha Fútbol 5", tipo: "Fútbol 5", descripcion: "Ideal para partidos rápidos y divertidos entre amigos.", precio_hora: 50000, capacidad: 10, activa: true, rating: 4.9, resenas: 38 },
-          { id: 2, nombre: "Cancha Fútbol 7", tipo: "Fútbol 7", descripcion: "Para un juego más táctico y dinámico con más jugadores.", precio_hora: 70000, capacidad: 14, activa: true, rating: 4.8, resenas: 29 },
-          { id: 3, nombre: "Cancha Fútbol 11", tipo: "Fútbol 11", descripcion: "La experiencia completa del fútbol profesional.", precio_hora: 100000, capacidad: 22, activa: true, rating: 5.0, resenas: 45 },
-        ]);
+        setCanchas([]);
       }
     } catch {
-      setCanchas([
-        { id: 1, nombre: "Cancha Fútbol 5", tipo: "Fútbol 5", descripcion: "Ideal para partidos rápidos y divertidos entre amigos.", precio_hora: 50000, capacidad: 10, activa: true, rating: 4.9, resenas: 38 },
-        { id: 2, nombre: "Cancha Fútbol 7", tipo: "Fútbol 7", descripcion: "Para un juego más táctico y dinámico con más jugadores.", precio_hora: 70000, capacidad: 14, activa: true, rating: 4.8, resenas: 29 },
-        { id: 3, nombre: "Cancha Fútbol 11", tipo: "Fútbol 11", descripcion: "La experiencia completa del fútbol profesional.", precio_hora: 100000, capacidad: 22, activa: true, rating: 5.0, resenas: 45 },
-      ]);
+      setCanchas([]);
     } finally {
       setCargando(false);
     }
