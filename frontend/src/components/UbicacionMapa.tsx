@@ -241,8 +241,8 @@ function UbicacionMapa({ onSelectCancha }: UbicacionMapaProps) {
     });
   }, [canchasSedes, sedeSeleccionada, onSelectCancha]);
 
-  // Trazar Ruta y Calcular Métricas
-  const calcularYTrazarRuta = () => {
+  // Trazar Ruta Real por las calles con OSRM
+  const calcularYTrazarRuta = async () => {
     if (!mapInstanceRef.current || !routeLayerRef.current || !ubicacionUsuario || !sedeSeleccionada) return;
 
     setCalculandoRuta(true);
@@ -272,8 +272,60 @@ function UbicacionMapa({ onSelectCancha }: UbicacionMapaProps) {
       .bindTooltip(`Origen: ${ubicacionUsuario.nombre}`, { permanent: false })
       .addTo(routeLayer);
 
-    // Cálculo de Distancia Haversine con factor de curvas viales
-    const R = 6371; // Radio de la Tierra en km
+    try {
+      // 1. Llamar a la API OSRM de Enrutamiento Vial Real por calles
+      const url = `https://router.project-osrm.org/route/v1/driving/${origenLng},${origenLat};${destLng},${destLat}?overview=full&geometries=geojson`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.code === "Ok" && data.routes && data.routes.length > 0) {
+        const rutaPrincipal = data.routes[0];
+        const distanciaKm = Math.round((rutaPrincipal.distance / 1000) * 10) / 10;
+        const duracionMin = Math.round(rutaPrincipal.duration / 60);
+
+        // Convertir coordenadas [lng, lat] de GeoJSON a [lat, lng] de Leaflet
+        const puntosCalle: [number, number][] = rutaPrincipal.geometry.coordinates.map(
+          ([lng, lat]: [number, number]) => [lat, lng]
+        );
+
+        setMetricasRuta({
+          distanciaKm: distanciaKm,
+          tiempoCarroMin: Math.max(6, duracionMin),
+          tiempoBiciMin: Math.max(9, Math.round((distanciaKm / 16) * 60)),
+          tiempoPieMin: Math.max(14, Math.round((distanciaKm / 4.8) * 60)),
+        });
+
+        // Sombra de ruta para efecto 3D
+        L.polyline(puntosCalle, {
+          color: "rgba(16, 185, 129, 0.35)",
+          weight: 10,
+          lineCap: "round",
+          lineJoin: "round",
+        }).addTo(routeLayer);
+
+        // Línea real que dobla exactamente por las calles y avenidas
+        L.polyline(puntosCalle, {
+          color: "#10b981",
+          weight: 5,
+          opacity: 0.95,
+          dashArray: "8, 12",
+          className: "fz-animated-route-line",
+          lineCap: "round",
+          lineJoin: "round",
+        }).addTo(routeLayer);
+
+        // Encuadrar el mapa para mostrar toda la ruta por las calles
+        const bounds = L.latLngBounds(puntosCalle);
+        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
+        setCalculandoRuta(false);
+        return;
+      }
+    } catch (err) {
+      console.warn("OSRM routing fallback:", err);
+    }
+
+    // Fallback geométrico si no hay conexión externa
+    const R = 6371;
     const dLat = ((destLat - origenLat) * Math.PI) / 180;
     const dLng = ((destLng - origenLng) * Math.PI) / 180;
     const a =
@@ -283,33 +335,22 @@ function UbicacionMapa({ onSelectCancha }: UbicacionMapaProps) {
         Math.sin(dLng / 2) *
         Math.sin(dLng / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distanciaLineaRecta = R * c;
-    const distanciaVial = Math.round(distanciaLineaRecta * 1.32 * 10) / 10;
-
-    // Estimación de Tiempos
-    const tiempoCarro = Math.max(8, Math.round((distanciaVial / 24) * 60));
-    const tiempoBici = Math.max(10, Math.round((distanciaVial / 15) * 60));
-    const tiempoPie = Math.max(15, Math.round((distanciaVial / 4.5) * 60));
+    const distanciaVial = Math.round(R * c * 1.32 * 10) / 10;
 
     setMetricasRuta({
       distanciaKm: Math.max(1.2, distanciaVial),
-      tiempoCarroMin: tiempoCarro,
-      tiempoBiciMin: tiempoBici,
-      tiempoPieMin: tiempoPie,
+      tiempoCarroMin: Math.max(8, Math.round((distanciaVial / 24) * 60)),
+      tiempoBiciMin: Math.max(10, Math.round((distanciaVial / 15) * 60)),
+      tiempoPieMin: Math.max(15, Math.round((distanciaVial / 4.5) * 60)),
     });
 
-    // Generar ruta curva suave con puntos intermedios realistas
-    const puntosRuta: [number, number][] = [];
-    const pasos = 16;
-    for (let i = 0; i <= pasos; i++) {
-      const t = i / pasos;
-      const latInter = origenLat + (destLat - origenLat) * t + Math.sin(t * Math.PI) * 0.006 * (i % 2 === 0 ? 1 : -0.5);
-      const lngInter = origenLng + (destLng - origenLng) * t + Math.sin(t * Math.PI) * -0.008;
-      puntosRuta.push([latInter, lngInter]);
-    }
-    puntosRuta.push([destLat, destLng]);
+    const puntosRuta: [number, number][] = [
+      [origenLat, origenLng],
+      [origenLat + (destLat - origenLat) * 0.5, origenLng],
+      [origenLat + (destLat - origenLat) * 0.5, destLng],
+      [destLat, destLng],
+    ];
 
-    // Línea de Ruta con Brillo Neón Esmeralda
     L.polyline(puntosRuta, {
       color: "rgba(16, 185, 129, 0.35)",
       weight: 10,
@@ -324,10 +365,8 @@ function UbicacionMapa({ onSelectCancha }: UbicacionMapaProps) {
       className: "fz-animated-route-line",
     }).addTo(routeLayer);
 
-    // Ajustar el zoom del mapa para encuadrar ambos puntos
     const bounds = L.latLngBounds([[origenLat, origenLng], [destLat, destLng]]);
     mapInstanceRef.current.fitBounds(bounds, { padding: [60, 60] });
-
     setCalculandoRuta(false);
   };
 
