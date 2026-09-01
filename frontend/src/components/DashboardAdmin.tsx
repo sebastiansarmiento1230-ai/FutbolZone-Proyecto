@@ -121,6 +121,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           mensaje: `Se ha añadido la cancha ${nuevaCancha.nombre} (${nuevaCancha.tipo}) a la base de datos.`,
           tipo: "sistema",
         });
+        window.dispatchEvent(new Event("fz_canchas_update"));
         cargarDatosAdmin();
       }
     } catch (err: any) {
@@ -144,6 +145,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
       if (res.success) {
         mostrarAlerta(`Cancha "${canchaParaEditar.nombre}" actualizada con éxito.`);
         setCanchaParaEditar(null);
+        window.dispatchEvent(new Event("fz_canchas_update"));
         cargarDatosAdmin();
       }
     } catch (err: any) {
@@ -156,6 +158,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
     try {
       await api.actualizarCancha(cancha.id, { activa: nuevoEstado });
       mostrarAlerta(`Estado de "${cancha.nombre}" cambiado a: ${nuevoEstado ? "Habilitada" : "En Mantenimiento"}`);
+      window.dispatchEvent(new Event("fz_canchas_update"));
       cargarDatosAdmin();
     } catch (err: any) {
       mostrarAlerta("Error al modificar estado: " + err.message, "error");
@@ -167,6 +170,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
     try {
       await api.eliminarCancha(id);
       mostrarAlerta("Cancha eliminada / desactivada.");
+      window.dispatchEvent(new Event("fz_canchas_update"));
       cargarDatosAdmin();
     } catch (err: any) {
       mostrarAlerta("Error: " + err.message, "error");

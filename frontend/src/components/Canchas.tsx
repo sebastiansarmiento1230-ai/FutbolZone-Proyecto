@@ -16,6 +16,9 @@ function Canchas({ onSelectCancha }: CanchasProps) {
 
   useEffect(() => {
     cargarCanchas();
+    const onCanchasChange = () => cargarCanchas();
+    window.addEventListener("fz_canchas_update", onCanchasChange);
+    return () => window.removeEventListener("fz_canchas_update", onCanchasChange);
   }, []);
 
   const obtenerImagenCancha = (nombre: string, tipo: string): string => {
