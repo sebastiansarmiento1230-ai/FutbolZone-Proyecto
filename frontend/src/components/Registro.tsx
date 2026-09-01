@@ -131,94 +131,41 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
   };
 
   return (
-    <div className="fz-pro-auth-layout">
-      {/* ── COLUMNA IZQUIERDA: SHOWCASE CORPORATIVO ── */}
-      <div className="fz-pro-auth-banner">
-        <div className="fz-banner-mesh-bg"></div>
-        <div className="fz-banner-glow-spot glow-1"></div>
-        <div className="fz-banner-glow-spot glow-2"></div>
+    <div
+      className="fz-floating-auth-backdrop"
+      onClick={() => onGoHome && onGoHome()}
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* ── CARD FLOTANTE CON EFECTO GLASS Y FONDO DESVANECIDO ── */}
+      <div
+        className="fz-floating-auth-card fz-floating-reg-wide"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Botón de Cerrar Flotante */}
+        {onGoHome && (
+          <button
+            type="button"
+            className="fz-btn-modal-close-corner"
+            onClick={onGoHome}
+            title="Cerrar y volver al inicio"
+            aria-label="Cerrar ventana"
+          >
+            ✕
+          </button>
+        )}
 
-        <div className="fz-banner-top">
-          {onGoHome && (
-            <button type="button" className="fz-btn-back-pill" onClick={onGoHome} title="Volver al Inicio">
-              <Icons.ArrowLeft size={16} />
-              <span>Volver al inicio</span>
-            </button>
-          )}
-          <div className="fz-banner-logo-badge">
-            <Icons.Ball size={20} color="#10b981" />
-            <span>FutbolZone ADSO</span>
+        {/* Cabecera de la Tarjeta */}
+        <div className="fz-floating-card-header">
+          <div className="fz-brand-avatar-box">
+            <Icons.User size={28} color="#ffffff" />
           </div>
+          <span className="fz-brand-pill-tag">✨ Registro de Cliente</span>
+          <h2>Crear Cuenta</h2>
+          <p>Diligencia tus datos para registrarte en FutbolZone</p>
         </div>
 
-        <div className="fz-banner-center">
-          <span className="fz-tag-pill">✨ Comunidad Deportiva Oficial</span>
-          <h1 className="fz-banner-title">
-            Únete y vive la pasión <br />
-            <span className="fz-text-gradient">del fútbol sintético.</span>
-          </h1>
-          <p className="fz-banner-desc">
-            Crea tu cuenta gratuita en segundos y accede a beneficios exclusivos: reserva en tiempo real, descuentos en horas valle y participación en torneos.
-          </p>
-
-          <div className="fz-banner-features-grid">
-            <div className="fz-feature-item">
-              <div className="fz-feature-icon-box">
-                <Icons.Trophy size={18} color="#10b981" />
-              </div>
-              <div>
-                <h4>Torneos y Copas</h4>
-                <p>Compite con tu equipo por trofeos y premios</p>
-              </div>
-            </div>
-
-            <div className="fz-feature-item">
-              <div className="fz-feature-icon-box">
-                <Icons.Clock size={18} color="#10b981" />
-              </div>
-              <div>
-                <h4>Gestión Inmediata</h4>
-                <p>Modifica o cancela turnos desde tu panel</p>
-              </div>
-            </div>
-
-            <div className="fz-feature-item">
-              <div className="fz-feature-icon-box">
-                <Icons.Shield size={18} color="#10b981" />
-              </div>
-              <div>
-                <h4>Protección de Datos</h4>
-                <p>Habeas Data conforme a la Ley 1581 de 2012</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="fz-banner-footer">
-          <div className="fz-social-proof">
-            <div className="fz-stars-row">
-              <Icons.Star size={14} color="#f59e0b" />
-              <Icons.Star size={14} color="#f59e0b" />
-              <Icons.Star size={14} color="#f59e0b" />
-              <Icons.Star size={14} color="#f59e0b" />
-              <Icons.Star size={14} color="#f59e0b" />
-            </div>
-            <span><strong>100% Seguro</strong> · Tratamiento ético y confidencial de datos</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── COLUMNA DERECHA: FORMULARIO DE REGISTRO ── */}
-      <div className="fz-pro-auth-card-side">
-        <div className="fz-pro-card fz-reg-wide-card">
-          <div className="fz-pro-card-header">
-            <div className="fz-brand-avatar-box">
-              <Icons.User size={28} color="#ffffff" />
-            </div>
-            <h2>Crear Cuenta</h2>
-            <p>Diligencia tus datos para registrarte como cliente en la plataforma</p>
-          </div>
-
+        <div className="fz-floating-card-body">
           <form onSubmit={manejarEnvio} className="fz-pro-form">
             {/* Fila 1: Nombre y Apellido */}
             <div className="fz-pro-row-2">

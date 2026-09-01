@@ -61,96 +61,42 @@ function Login({ onLoginSuccess, onSwitchToRegister, onGoHome }: LoginProps) {
   };
 
   return (
-    <div className="fz-pro-auth-layout">
-      {/* ── COLUMNA IZQUIERDA: SHOWCASE CORPORATIVO ── */}
-      <div className="fz-pro-auth-banner">
-        <div className="fz-banner-mesh-bg"></div>
-        <div className="fz-banner-glow-spot glow-1"></div>
-        <div className="fz-banner-glow-spot glow-2"></div>
+    <div
+      className="fz-floating-auth-backdrop"
+      onClick={() => onGoHome && onGoHome()}
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* ── CARD FLOTANTE CON EFECTO GLASS Y FONDO DESVANECIDO ── */}
+      <div
+        className="fz-floating-auth-card"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Botón de Cerrar Flotante */}
+        {onGoHome && (
+          <button
+            type="button"
+            className="fz-btn-modal-close-corner"
+            onClick={onGoHome}
+            title="Cerrar y volver al inicio"
+            aria-label="Cerrar ventana"
+          >
+            ✕
+          </button>
+        )}
 
-        <div className="fz-banner-top">
-          {onGoHome && (
-            <button type="button" className="fz-btn-back-pill" onClick={onGoHome} title="Volver al Inicio">
-              <Icons.ArrowLeft size={16} />
-              <span>Volver al inicio</span>
-            </button>
-          )}
-          <div className="fz-banner-logo-badge">
-            <Icons.Ball size={20} color="#10b981" />
-            <span>FutbolZone ADSO</span>
+        {/* Cabecera de la Tarjeta Flotante */}
+        <div className="fz-floating-card-header">
+          <div className="fz-brand-avatar-box">
+            <Icons.Ball size={28} color="#ffffff" />
           </div>
+          <span className="fz-brand-pill-tag">⚡ FutbolZone ADSO III</span>
+          <h2>Iniciar Sesión</h2>
+          <p>Ingresa tus credenciales para acceder a tus reservas</p>
         </div>
 
-        <div className="fz-banner-center">
-          <span className="fz-tag-pill">⚡ Experiencia Deportiva Digital</span>
-          <h1 className="fz-banner-title">
-            Tu cancha sintética <br />
-            <span className="fz-text-gradient">a un solo clic.</span>
-          </h1>
-          <p className="fz-banner-desc">
-            Gestiona reservas en tiempo real, compite en torneos oficiales y organiza tus partidos sin esperas ni llamadas.
-          </p>
-
-          <div className="fz-banner-features-grid">
-            <div className="fz-feature-item">
-              <div className="fz-feature-icon-box">
-                <Icons.Calendar size={18} color="#10b981" />
-              </div>
-              <div>
-                <h4>Reserva en Vivo</h4>
-                <p>Disponibilidad 24/7 sin solapamientos</p>
-              </div>
-            </div>
-
-            <div className="fz-feature-item">
-              <div className="fz-feature-icon-box">
-                <Icons.Lightbulb size={18} color="#10b981" />
-              </div>
-              <div>
-                <h4>Iluminación LED</h4>
-                <p>Canchas 5, 7 y 11 profesionales</p>
-              </div>
-            </div>
-
-            <div className="fz-feature-item">
-              <div className="fz-feature-icon-box">
-                <Icons.Shield size={18} color="#10b981" />
-              </div>
-              <div>
-                <h4>Seguridad JWT</h4>
-                <p>Acceso cifrado y seguro para tus datos</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="fz-banner-footer">
-          <div className="fz-social-proof">
-            <div className="fz-stars-row">
-              <Icons.Star size={14} color="#f59e0b" />
-              <Icons.Star size={14} color="#f59e0b" />
-              <Icons.Star size={14} color="#f59e0b" />
-              <Icons.Star size={14} color="#f59e0b" />
-              <Icons.Star size={14} color="#f59e0b" />
-            </div>
-            <span><strong>4.9/5</strong> · Más de 2.500 partidos jugados</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── COLUMNA DERECHA: FORMULARIO ELEGANTE ── */}
-      <div className="fz-pro-auth-card-side">
-        <div className="fz-pro-card">
-          {/* Header del Formulario */}
-          <div className="fz-pro-card-header">
-            <div className="fz-brand-avatar-box">
-              <Icons.Ball size={28} color="#ffffff" />
-            </div>
-            <h2>Iniciar Sesión</h2>
-            <p>Ingresa a tu cuenta para continuar en FutbolZone</p>
-          </div>
-
-          {/* Acceso Rápido 1-Clic para Demostración */}
+        <div className="fz-floating-card-body">
+          {/* Accesos Rápidos 1-Clic */}
           <div className="fz-pro-demo-section">
             <div className="fz-demo-header-label">
               <Icons.Sparkles size={14} color="#10b981" />
@@ -226,8 +172,7 @@ function Login({ onLoginSuccess, onSwitchToRegister, onGoHome }: LoginProps) {
                   type="button"
                   className="fz-btn-eye"
                   onClick={() => setMostrarContrasena(!mostrarContrasena)}
-                  title={mostrarContrasena ? "Ocultar contraseña" : "Ver contraseña"}
-                  aria-label="Alternar visibilidad de contraseña"
+                  title={mostrarContrasena ? "Ocultar" : "Ver"}
                 >
                   {mostrarContrasena ? (
                     <Icons.EyeOff size={18} color="#64748b" />

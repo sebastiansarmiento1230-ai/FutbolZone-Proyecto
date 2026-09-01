@@ -92,50 +92,6 @@ function App() {
     else setVista("client_dashboard");
   };
 
-  // Página independiente de Login
-  if (vista === "login") {
-    return (
-      <div className={`app-device-wrapper ${tema === "oscuro" ? "dark-mode dark-theme" : ""} ${modoDispositivo === "celular" ? "sim-mobile-active" : "sim-desktop-active"}`}>
-        <div className="fz-screen-viewport">
-          <Login
-            onLoginSuccess={manejarLoginExitoso}
-            onSwitchToRegister={() => setVista("registro")}
-            onGoHome={() => setVista("landing")}
-          />
-        </div>
-        <ThemeJoystick
-          tema={tema}
-          onToggleTema={toggleTema}
-          onSetTema={setTemaManual}
-          modoDispositivo={modoDispositivo}
-          onCambiarModoDispositivo={setModoDispositivo}
-        />
-      </div>
-    );
-  }
-
-  // Página independiente de Registro
-  if (vista === "registro") {
-    return (
-      <div className={`app-device-wrapper ${tema === "oscuro" ? "dark-mode dark-theme" : ""} ${modoDispositivo === "celular" ? "sim-mobile-active" : "sim-desktop-active"}`}>
-        <div className="fz-screen-viewport">
-          <Registro
-            onRegisterSuccess={() => setVista("login")}
-            onSwitchToLogin={() => setVista("login")}
-            onGoHome={() => setVista("landing")}
-          />
-        </div>
-        <ThemeJoystick
-          tema={tema}
-          onToggleTema={toggleTema}
-          onSetTema={setTemaManual}
-          modoDispositivo={modoDispositivo}
-          onCambiarModoDispositivo={setModoDispositivo}
-        />
-      </div>
-    );
-  }
-
   // Página independiente de Configuración de Reserva
   if (vista === "reserva" && canchaParaReservar) {
     return (
@@ -186,7 +142,7 @@ function App() {
           </div>
         )}
 
-        <div className={`app-main-wrapper ${tema === "oscuro" ? "dark-mode" : ""}`}>
+        <div className={`app-main-wrapper ${tema === "oscuro" ? "dark-mode" : ""} ${vista === "login" || vista === "registro" ? "fz-bg-faded-active" : ""}`}>
           {/* ANUNCIO GLOBAL DEL ADMIN */}
           <AnuncioBanner anuncio={anuncioGlobal} />
 
@@ -427,6 +383,24 @@ function App() {
         </div>
       </footer>
     </div>
+
+    {/* MODAL FLOTANTE DE LOGIN CON FONDO DESVANECIDO */}
+    {vista === "login" && (
+      <Login
+        onLoginSuccess={manejarLoginExitoso}
+        onSwitchToRegister={() => setVista("registro")}
+        onGoHome={() => setVista("landing")}
+      />
+    )}
+
+    {/* MODAL FLOTANTE DE REGISTRO CON FONDO DESVANECIDO */}
+    {vista === "registro" && (
+      <Registro
+        onRegisterSuccess={() => setVista("login")}
+        onSwitchToLogin={() => setVista("login")}
+        onGoHome={() => setVista("landing")}
+      />
+    )}
 
     {/* Barra inferior del marco de celular (si está activo) */}
     {modoDispositivo === "celular" && (

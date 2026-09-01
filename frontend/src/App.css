@@ -34,7 +34,13 @@ button:active, .btn:active, .btn-primary-hero:active, .btn-secondary-hero:active
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, filter 0.3s ease;
+}
+
+.app-main-wrapper.fz-bg-faded-active {
+  filter: blur(8px) brightness(0.6);
+  pointer-events: none;
+  user-select: none;
 }
 
 /* ── HEADER SUPERIOR FLOTANTE ── */
