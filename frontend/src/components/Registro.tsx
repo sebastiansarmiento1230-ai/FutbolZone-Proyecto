@@ -16,58 +16,64 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
   const [telefono, setTelefono] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [mostrarPassword, setMostrarPassword] = useState<boolean>(false);
+  const [mostrarConfirmPassword, setMostrarConfirmPassword] = useState<boolean>(false);
   const [cargando, setCargando] = useState<boolean>(false);
   const [mensaje, setMensaje] = useState<{ texto: string; tipo: "exito" | "error" } | null>(null);
 
-  // Calcular la fortaleza de la contraseña en tiempo real
-  const calcularFortaleza = (pass: string, tel: string) => {
-    if (!pass) return { porcentaje: 0, color: "#cbd5e1", label: "" };
-    
-    let score = 0;
-    if (pass.length >= 8) score += 35;
-    if (/[0-9]/.test(pass)) score += 20;
-    if (/[A-Z]/.test(pass)) score += 15;
-    if (/[!@#$%^&*(),.?":{}|<>]/.test(pass)) score += 30;
+  // Requisitos dinámicos de contraseña
+  const tieneLongitud = password.length >= 8;
+  const tieneNumero = /[0-9]/.test(password);
+  const tieneEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  const tieneMayuscula = /[A-Z]/.test(password);
+  const coincidenClaves = password.length > 0 && password === confirmPassword;
 
-    // Penalización si incluye el teléfono
-    if (tel && tel.length >= 4 && pass.includes(tel)) {
-      score = 10;
+  // Calcular la fortaleza de la contraseña
+  const calcularFortaleza = () => {
+    if (!password) return { porcentaje: 0, color: "#cbd5e1", label: "" };
+    
+    let puntos = 0;
+    if (tieneLongitud) puntos += 25;
+    if (tieneNumero) puntos += 25;
+    if (tieneMayuscula) puntos += 25;
+    if (tieneEspecial) puntos += 25;
+
+    if (telefono && telefono.length >= 4 && password.includes(telefono)) {
+      puntos = Math.min(puntos, 25);
     }
 
-    if (score < 40 || pass.length < 8) {
-      return { porcentaje: 33, color: "#ef4444", label: "Nivel Débil" };
-    } else if (score < 75) {
-      return { porcentaje: 66, color: "#f59e0b", label: "Nivel Medio" };
+    if (puntos <= 25) {
+      return { porcentaje: 25, color: "#ef4444", label: "Débil" };
+    } else if (puntos <= 50) {
+      return { porcentaje: 50, color: "#f59e0b", label: "Media" };
+    } else if (puntos <= 75) {
+      return { porcentaje: 75, color: "#3b82f6", label: "Buena" };
     } else {
-      return { porcentaje: 100, color: "#10b981", label: "Nivel Seguro" };
+      return { porcentaje: 100, color: "#10b981", label: "Excelente" };
     }
   };
 
-  const fortaleza = calcularFortaleza(password, telefono);
+  const fortaleza = calcularFortaleza();
 
   const manejarEnvio = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!nombre || !apellido || !correo || !password || !confirmPassword) {
-      setMensaje({ texto: "Por favor complete los campos obligatorios.", tipo: "error" });
+    if (!nombre.trim() || !apellido.trim() || !correo.trim() || !password || !confirmPassword) {
+      setMensaje({ texto: "Por favor completa todos los campos obligatorios.", tipo: "error" });
       return;
     }
 
-    // 1. Validar coincidencia de contraseñas
     if (password !== confirmPassword) {
-      setMensaje({ texto: "Las contraseñas no coinciden. Verifícalas.", tipo: "error" });
+      setMensaje({ texto: "Las contraseñas no coinciden. Por favor verifícalas.", tipo: "error" });
       return;
     }
 
-    // 2. Validar longitud mínima de 8 caracteres
     if (password.length < 8) {
       setMensaje({ texto: "La contraseña debe tener al menos 8 caracteres.", tipo: "error" });
       return;
     }
 
-    // 3. Validar carácter especial
-    const tieneCaracterEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    if (!tieneCaracterEspecial) {
+    if (!tieneEspecial) {
       setMensaje({
         texto: "La contraseña debe incluir al menos un carácter especial (ej. @, #, $, %, !).",
         tipo: "error",
@@ -75,10 +81,9 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
       return;
     }
 
-    // 4. Validar que no sea el teléfono registrado
     if (telefono && (password === telefono || password.includes(telefono))) {
       setMensaje({
-        texto: "La contraseña no puede ser igual ni contener tu número de teléfono.",
+        texto: "Por seguridad, la contraseña no puede contener tu número de teléfono.",
         tipo: "error",
       });
       return;
@@ -89,171 +94,330 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
 
     try {
       const res = await api.registro({
-        nombre,
-        apellido,
-        correo,
-        telefono,
+        nombre: nombre.trim(),
+        apellido: apellido.trim(),
+        correo: correo.trim().toLowerCase(),
+        telefono: telefono.trim(),
         password,
       });
 
       if (res.success) {
         setMensaje({
-          texto: "¡Registro exitoso! Ya puedes iniciar sesión con tu cuenta.",
+          texto: "¡Cuenta creada exitosamente! Redirigiendo al inicio de sesión...",
           tipo: "exito",
         });
         setTimeout(() => {
           if (onRegisterSuccess) onRegisterSuccess();
           else if (onSwitchToLogin) onSwitchToLogin();
-        }, 1500);
+        }, 1200);
       } else {
-        setMensaje({ texto: res.message || "Error al registrar usuario.", tipo: "error" });
+        setMensaje({ texto: res.message || "Error al registrar la cuenta.", tipo: "error" });
       }
     } catch (err: any) {
-      setMensaje({ texto: err.message || "Ocurrió un error en el registro.", tipo: "error" });
+      setMensaje({ texto: err.message || "Ocurrió un error al conectar con el servidor.", tipo: "error" });
     } finally {
       setCargando(false);
     }
   };
 
   return (
-    <section className="fz-auth-container">
-      <div className="fz-auth-phone-card fz-reg-card">
-        {/* Cabecera Oscura Curva */}
-        <div className="fz-auth-top-dark">
+    <div className="fz-pro-auth-layout">
+      {/* ── COLUMNA IZQUIERDA: SHOWCASE CORPORATIVO ── */}
+      <div className="fz-pro-auth-banner">
+        <div className="fz-banner-mesh-bg"></div>
+        <div className="fz-banner-glow-spot glow-1"></div>
+        <div className="fz-banner-glow-spot glow-2"></div>
+
+        <div className="fz-banner-top">
           {onGoHome && (
-            <button type="button" className="fz-auth-btn-back" onClick={onGoHome} title="Volver al Inicio">
-              ← Inicio
+            <button type="button" className="fz-btn-back-pill" onClick={onGoHome} title="Volver al Inicio">
+              <Icons.ArrowLeft size={16} />
+              <span>Volver al inicio</span>
             </button>
           )}
-
-          <div className="fz-auth-avatar-circle">
-            <Icons.Ball size={32} color="#10b981" />
+          <div className="fz-banner-logo-badge">
+            <Icons.Ball size={20} color="#10b981" />
+            <span>FutbolZone ADSO</span>
           </div>
-          <span className="fz-auth-brand-tag">Crear Cuenta</span>
         </div>
 
-        {/* Cuerpo Blanco del Formulario */}
-        <div className="fz-auth-body">
-          <div className="fz-auth-header-text">
-            <h2>Únete a FutbolZone</h2>
-            <p>Regístrate para reservar canchas y armar tus partidos</p>
+        <div className="fz-banner-center">
+          <span className="fz-tag-pill">✨ Comunidad Deportiva Oficial</span>
+          <h1 className="fz-banner-title">
+            Únete y vive la pasión <br />
+            <span className="fz-text-gradient">del fútbol sintético.</span>
+          </h1>
+          <p className="fz-banner-desc">
+            Crea tu cuenta gratuita en segundos y accede a beneficios exclusivos: reserva en tiempo real, descuentos en horas valle y participación en torneos.
+          </p>
+
+          <div className="fz-banner-features-grid">
+            <div className="fz-feature-item">
+              <div className="fz-feature-icon-box">
+                <Icons.Trophy size={18} color="#10b981" />
+              </div>
+              <div>
+                <h4>Torneos y Copas</h4>
+                <p>Compite con tu equipo por trofeos y premios</p>
+              </div>
+            </div>
+
+            <div className="fz-feature-item">
+              <div className="fz-feature-icon-box">
+                <Icons.Clock size={18} color="#10b981" />
+              </div>
+              <div>
+                <h4>Gestión Inmediata</h4>
+                <p>Modifica o cancela turnos desde tu panel</p>
+              </div>
+            </div>
+
+            <div className="fz-feature-item">
+              <div className="fz-feature-icon-box">
+                <Icons.Shield size={18} color="#10b981" />
+              </div>
+              <div>
+                <h4>Notificaciones por Correo</h4>
+                <p>Confirmaciones de reserva directas a tu Gmail</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="fz-banner-footer">
+          <div className="fz-social-proof">
+            <div className="fz-stars-row">
+              <Icons.Star size={14} color="#f59e0b" />
+              <Icons.Star size={14} color="#f59e0b" />
+              <Icons.Star size={14} color="#f59e0b" />
+              <Icons.Star size={14} color="#f59e0b" />
+              <Icons.Star size={14} color="#f59e0b" />
+            </div>
+            <span><strong>100% Gratuito</strong> · Registro rápido y sin trámites</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── COLUMNA DERECHA: FORMULARIO DE REGISTRO ── */}
+      <div className="fz-pro-auth-card-side">
+        <div className="fz-pro-card fz-reg-wide-card">
+          <div className="fz-pro-card-header">
+            <div className="fz-brand-avatar-box">
+              <Icons.User size={28} color="#ffffff" />
+            </div>
+            <h2>Crear Cuenta</h2>
+            <p>Diligencia tus datos para registrarte como cliente</p>
           </div>
 
-          <form onSubmit={manejarEnvio} className="fz-auth-form">
-            <div className="fz-form-row-2">
-              <div className="fz-input-group">
-                <label>Nombre *</label>
-                <input
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Juan"
-                  required
-                />
+          <form onSubmit={manejarEnvio} className="fz-pro-form">
+            {/* Fila 1: Nombre y Apellido */}
+            <div className="fz-pro-row-2">
+              <div className="fz-pro-field">
+                <label htmlFor="reg-nombre">Nombre *</label>
+                <div className="fz-input-icon-wrapper">
+                  <span className="fz-field-icon">
+                    <Icons.User size={18} color="#64748b" />
+                  </span>
+                  <input
+                    id="reg-nombre"
+                    type="text"
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    placeholder="Ej. Juan"
+                    required
+                  />
+                </div>
               </div>
-              <div className="fz-input-group">
-                <label>Apellido *</label>
-                <input
-                  type="text"
-                  value={apellido}
-                  onChange={(e) => setApellido(e.target.value)}
-                  placeholder="Pérez"
-                  required
-                />
+
+              <div className="fz-pro-field">
+                <label htmlFor="reg-apellido">Apellido *</label>
+                <div className="fz-input-icon-wrapper">
+                  <span className="fz-field-icon">
+                    <Icons.User size={18} color="#64748b" />
+                  </span>
+                  <input
+                    id="reg-apellido"
+                    type="text"
+                    value={apellido}
+                    onChange={(e) => setApellido(e.target.value)}
+                    placeholder="Ej. Pérez"
+                    required
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="fz-form-row-2">
-              <div className="fz-input-group">
-                <label>Correo Electrónico *</label>
-                <input
-                  type="email"
-                  value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
-                  placeholder="juan@correo.com"
-                  required
-                />
+            {/* Fila 2: Correo y Teléfono */}
+            <div className="fz-pro-row-2">
+              <div className="fz-pro-field">
+                <label htmlFor="reg-correo">Correo Electrónico *</label>
+                <div className="fz-input-icon-wrapper">
+                  <span className="fz-field-icon">
+                    <Icons.Mail size={18} color="#64748b" />
+                  </span>
+                  <input
+                    id="reg-correo"
+                    type="email"
+                    value={correo}
+                    onChange={(e) => setCorreo(e.target.value)}
+                    placeholder="tunombre@correo.com"
+                    autoComplete="email"
+                    required
+                  />
+                </div>
               </div>
-              <div className="fz-input-group">
-                <label>Teléfono</label>
-                <input
-                  type="tel"
-                  value={telefono}
-                  onChange={(e) => setTelefono(e.target.value)}
-                  placeholder="3001234567"
-                />
+
+              <div className="fz-pro-field">
+                <label htmlFor="reg-telefono">Teléfono / WhatsApp</label>
+                <div className="fz-input-icon-wrapper">
+                  <span className="fz-field-icon">
+                    <Icons.Phone size={18} color="#64748b" />
+                  </span>
+                  <input
+                    id="reg-telefono"
+                    type="tel"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    placeholder="3001234567"
+                    autoComplete="tel"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="fz-form-row-2">
-              <div className="fz-input-group">
-                <label>Contraseña *</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
-                  required
-                />
+            {/* Fila 3: Contraseña y Confirmar */}
+            <div className="fz-pro-row-2">
+              <div className="fz-pro-field">
+                <label htmlFor="reg-pass">Contraseña *</label>
+                <div className="fz-input-icon-wrapper">
+                  <span className="fz-field-icon">
+                    <Icons.Lock size={18} color="#64748b" />
+                  </span>
+                  <input
+                    id="reg-pass"
+                    type={mostrarPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Mínimo 8 caracteres"
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="fz-btn-eye"
+                    onClick={() => setMostrarPassword(!mostrarPassword)}
+                    title={mostrarPassword ? "Ocultar" : "Ver"}
+                  >
+                    {mostrarPassword ? <Icons.EyeOff size={18} /> : <Icons.Eye size={18} />}
+                  </button>
+                </div>
               </div>
-              <div className="fz-input-group">
-                <label>Confirmar Contraseña *</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repite la contraseña"
-                  required
-                />
+
+              <div className="fz-pro-field">
+                <label htmlFor="reg-conf-pass">Confirmar Contraseña *</label>
+                <div className="fz-input-icon-wrapper">
+                  <span className="fz-field-icon">
+                    <Icons.Lock size={18} color="#64748b" />
+                  </span>
+                  <input
+                    id="reg-conf-pass"
+                    type={mostrarConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repite tu contraseña"
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="fz-btn-eye"
+                    onClick={() => setMostrarConfirmPassword(!mostrarConfirmPassword)}
+                    title={mostrarConfirmPassword ? "Ocultar" : "Ver"}
+                  >
+                    {mostrarConfirmPassword ? <Icons.EyeOff size={18} /> : <Icons.Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Barra de Fortaleza */}
+            {/* Barra de Fortaleza Visual */}
             {password && (
-              <div className="fz-strength-box">
-                <div className="fz-strength-track">
+              <div className="fz-pro-strength-box">
+                <div className="fz-pro-strength-track">
                   <div
-                    className="fz-strength-fill"
+                    className="fz-pro-strength-bar"
                     style={{
                       width: `${fortaleza.porcentaje}%`,
                       backgroundColor: fortaleza.color,
                     }}
                   ></div>
                 </div>
-                <span className="fz-strength-label" style={{ color: fortaleza.color }}>
-                  Seguridad: {fortaleza.label}
-                </span>
+                <div className="fz-pro-strength-label-row">
+                  <span>Fortaleza de clave: <strong style={{ color: fortaleza.color }}>{fortaleza.label}</strong></span>
+                  {confirmPassword && (
+                    <span style={{ color: coincidenClaves ? "#10b981" : "#ef4444" }}>
+                      {coincidenClaves ? "✓ Coinciden" : "✕ No coinciden"}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
-            <div className="fz-rules-badge">
-              💡 Mínimo 8 caracteres y 1 símbolo (@, #, $, %).
+            {/* Lista de Requisitos de Seguridad */}
+            <div className="fz-security-checklist">
+              <span className={`fz-check-item ${tieneLongitud ? "valid" : ""}`}>
+                {tieneLongitud ? "✓" : "○"} 8+ caracteres
+              </span>
+              <span className={`fz-check-item ${tieneNumero ? "valid" : ""}`}>
+                {tieneNumero ? "✓" : "○"} Número
+              </span>
+              <span className={`fz-check-item ${tieneMayuscula ? "valid" : ""}`}>
+                {tieneMayuscula ? "✓" : "○"} Mayúscula
+              </span>
+              <span className={`fz-check-item ${tieneEspecial ? "valid" : ""}`}>
+                {tieneEspecial ? "✓" : "○"} Símbolo (@, #, $)
+              </span>
             </div>
 
             {mensaje && (
-              <div className={`fz-auth-alert ${mensaje.tipo}`}>
-                {mensaje.tipo === "exito" ? "✅" : "⚠️"} {mensaje.texto}
+              <div className={`fz-pro-alert ${mensaje.tipo}`} role="alert">
+                <span className="fz-alert-icon">
+                  {mensaje.tipo === "exito" ? <Icons.Check size={16} /> : "⚠️"}
+                </span>
+                <span>{mensaje.texto}</span>
               </div>
             )}
 
-            <button type="submit" className="fz-btn-auth-submit" disabled={cargando}>
-              {cargando ? "Creando cuenta..." : "Completar Registro"}
+            <button type="submit" className="fz-btn-submit-gradient" disabled={cargando}>
+              {cargando ? (
+                <span className="fz-spinner-row">
+                  <span className="fz-spinner"></span>
+                  <span>Creando tu cuenta...</span>
+                </span>
+              ) : (
+                <span>Crear mi Cuenta Gratis ➔</span>
+              )}
             </button>
           </form>
 
           {onSwitchToLogin && (
-            <div className="fz-auth-footer">
+            <div className="fz-pro-card-footer">
               <p>
-                ¿Ya tienes una cuenta?{" "}
-                <button type="button" className="fz-auth-link" onClick={onSwitchToLogin}>
+                ¿Ya tienes una cuenta registrada?{" "}
+                <button type="button" className="fz-link-action" onClick={onSwitchToLogin}>
                   Inicia sesión aquí
                 </button>
               </p>
             </div>
           )}
+
+          <div className="fz-security-badge-footer">
+            <Icons.Shield size={14} color="#10b981" />
+            <span>Registro protegido por cifrado SSL · FutbolZone SENA ADSO III</span>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 

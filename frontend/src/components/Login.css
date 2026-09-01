@@ -1,184 +1,431 @@
 /* ===================================================
-   FUTBOLZONE — LOGIN (ESTÉTICA DOS TONOS / CURVED CARD)
+   FUTBOLZONE — AUTH (SPLIT-SCREEN ULTRA PROFESIONAL)
    =================================================== */
 
-.fz-auth-container {
+.fz-pro-auth-layout {
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  background: #f1f5f9;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  background: #090d16;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #0f172a;
+  position: relative;
+  overflow-x: hidden;
 }
 
-.fz-auth-phone-card {
+/* ===================================================
+   1. COLUMNA IZQUIERDA: SHOWCASE CORPORATIVO
+   =================================================== */
+.fz-pro-auth-banner {
+  position: relative;
+  background: radial-gradient(circle at 20% 20%, #06281b 0%, #081a13 50%, #040e0a 100%);
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border-right: 1px solid rgba(16, 185, 129, 0.15);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, 0.35);
+}
+
+.fz-banner-mesh-bg {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(rgba(16, 185, 129, 0.12) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px, 16px 16px;
+  background-position: 0 0, 16px 16px;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.fz-banner-glow-spot {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.fz-banner-glow-spot.glow-1 {
+  top: -10%;
+  left: -10%;
+  width: 380px;
+  height: 380px;
+  background: rgba(16, 185, 129, 0.22);
+}
+
+.fz-banner-glow-spot.glow-2 {
+  bottom: 10%;
+  right: -10%;
+  width: 320px;
+  height: 320px;
+  background: rgba(5, 150, 105, 0.18);
+}
+
+.fz-banner-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.fz-btn-back-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.25s ease;
+}
+
+.fz-btn-back-pill:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #ffffff;
+  transform: translateX(-3px);
+}
+
+.fz-banner-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 7px 16px;
+  border-radius: 999px;
+  color: #34d399;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.fz-banner-center {
+  position: relative;
+  z-index: 2;
+  margin: 36px 0;
+}
+
+.fz-tag-pill {
+  display: inline-block;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  border-left: 3px solid #10b981;
+}
+
+.fz-banner-title {
+  color: #ffffff;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  margin: 0 0 16px;
+}
+
+.fz-text-gradient {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.fz-banner-desc {
+  color: #94a3b8;
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 480px;
+  margin: 0 0 32px;
+}
+
+.fz-banner-features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  max-width: 460px;
+}
+
+.fz-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 18px;
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+
+.fz-feature-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(16, 185, 129, 0.35);
+  transform: translateY(-2px);
+}
+
+.fz-feature-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fz-feature-item h4 {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.fz-feature-item p {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.fz-banner-footer {
+  position: relative;
+  z-index: 2;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fz-social-proof {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: #cbd5e1;
+}
+
+.fz-stars-row {
+  display: flex;
+  gap: 2px;
+}
+
+/* ===================================================
+   2. COLUMNA DERECHA: CARD DEL FORMULARIO
+   =================================================== */
+.fz-pro-auth-card-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  background: #0f172a;
+}
+
+.fz-pro-card {
   width: 100%;
   max-width: 440px;
   background: #ffffff;
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 8px 16px -4px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  position: relative;
-  transition: transform 0.2s ease;
+  border-radius: 24px;
+  padding: 38px 36px;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
 }
 
-/* ── CABECERA SUPERIOR OSCURA CON CURVA ── */
-.fz-auth-top-dark {
-  background: linear-gradient(135deg, #071f15 0%, #0c2b1f 100%);
-  color: #ffffff;
-  padding: 35px 25px 50px;
+.fz-pro-card-header {
   text-align: center;
-  position: relative;
-  border-bottom-left-radius: 40px;
-  border-bottom-right-radius: 40px;
-  box-shadow: 0 8px 20px rgba(7, 31, 21, 0.25);
+  margin-bottom: 22px;
 }
 
-.fz-auth-btn-back {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.fz-auth-btn-back:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.fz-auth-avatar-circle {
-  width: 80px;
-  height: 80px;
-  background: #ffffff;
-  border-radius: 50%;
-  margin: 10px auto 10px;
+.fz-brand-avatar-box {
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 16px;
+  margin: 0 auto 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  border: 4px solid #10b981;
+  box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.5);
 }
 
-.fz-auth-avatar-icon {
-  font-size: 38px;
-}
-
-.fz-auth-brand-tag {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #6ee7b7;
-}
-
-/* ── CUERPO BLANCO Y FORMULARIO ── */
-.fz-auth-body {
-  padding: 28px 32px 35px;
-}
-
-.fz-auth-header-text {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.fz-auth-header-text h2 {
+.fz-pro-card-header h2 {
   margin: 0 0 6px;
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 900;
   color: #0f172a;
+  letter-spacing: -0.5px;
 }
 
-.fz-auth-header-text p {
+.fz-pro-card-header p {
   margin: 0;
   font-size: 13px;
   color: #64748b;
 }
 
-/* DEMO BOX 1-CLIC */
-.fz-demo-box {
+/* ── ACCESOS RÁPIDOS 1-CLIC (DEMO) ── */
+.fz-pro-demo-section {
   background: #f8fafc;
   border: 1px dashed #cbd5e1;
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 20px;
-  text-align: center;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
 }
 
-.fz-demo-title {
-  display: block;
+.fz-demo-header-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
-  margin-bottom: 8px;
+  color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: 10px;
 }
 
-.fz-demo-btn-group {
+.fz-demo-pills-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
-.fz-demo-btn {
+.fz-demo-pill {
   flex: 1;
-  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.fz-demo-btn.admin {
+.fz-demo-pill.admin {
   background: #0f172a;
   color: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
 }
 
-.fz-demo-btn.cliente {
+.fz-demo-pill.admin:hover {
+  background: #1e293b;
+  transform: translateY(-2px);
+}
+
+.fz-demo-pill.cliente {
   background: #10b981;
   color: #ffffff;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
 }
 
-.fz-demo-btn:hover {
+.fz-demo-pill.cliente:hover {
+  background: #059669;
   transform: translateY(-2px);
-  opacity: 0.95;
 }
 
-/* FORMULARIO */
-.fz-auth-form {
+.fz-divider-text {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 18px 0;
+  color: #94a3b8;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fz-divider-text::before,
+.fz-divider-text::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.fz-divider-text span {
+  padding: 0 12px;
+}
+
+/* ── FORMULARIO Y CAMPOS ── */
+.fz-pro-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.fz-input-group {
+.fz-pro-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
   text-align: left;
 }
 
-.fz-input-group label {
+.fz-field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fz-pro-field label {
   font-size: 12px;
   font-weight: 700;
   color: #334155;
 }
 
-.fz-input-group input {
+.fz-btn-forgot {
+  background: none;
+  border: none;
+  color: #059669;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.fz-btn-forgot:hover {
+  color: #10b981;
+  text-decoration: underline;
+}
+
+.fz-input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fz-field-icon {
+  position: absolute;
+  left: 14px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+.fz-input-icon-wrapper input {
+  width: 100%;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  padding: 12px 16px;
+  border: 1.5px solid #e2e8f0;
+  padding: 12px 14px 12px 42px;
   border-radius: 12px;
   font-size: 14px;
   color: #0f172a;
@@ -186,89 +433,217 @@
   transition: all 0.2s ease;
 }
 
-.fz-input-group input:focus {
+.fz-input-icon-wrapper input:focus {
   background: #ffffff;
   border-color: #10b981;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+  box-shadow: 0 0 0 3.5px rgba(16, 185, 129, 0.15);
 }
 
-.fz-password-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.fz-password-wrapper input {
-  width: 100%;
-}
-
-.fz-toggle-eye {
+.fz-btn-eye {
   position: absolute;
   right: 12px;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 15px;
-  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: #64748b;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
 }
 
-.fz-auth-alert {
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 13px;
+.fz-btn-eye:hover {
+  opacity: 1;
+  color: #10b981;
+}
+
+/* ── ALERTAS Y FEEDBACK ── */
+.fz-pro-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   text-align: left;
+  animation: fadeInAlert 0.3s ease;
 }
 
-.fz-auth-alert.exito {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
+@keyframes fadeInAlert {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.fz-auth-alert.error {
-  background: #fee2e2;
-  color: #b91c1c;
+.fz-pro-alert.exito {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.fz-pro-alert.error {
+  background: #fef2f2;
+  color: #991b1b;
   border: 1px solid #fecaca;
 }
 
-.fz-btn-auth-submit {
+/* ── BOTÓN DE ENVÍO CON DEGRADADO ── */
+.fz-btn-submit-gradient {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
   border: none;
-  padding: 14px;
+  padding: 14px 20px;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.35);
-  transition: all 0.2s ease;
-  margin-top: 6px;
+  box-shadow: 0 8px 20px -3px rgba(16, 185, 129, 0.4);
+  transition: all 0.25s ease;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.2px;
 }
 
-.fz-btn-auth-submit:hover:not(:disabled) {
+.fz-btn-submit-gradient:hover:not(:disabled) {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
   transform: translateY(-2px);
-  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.45);
+  box-shadow: 0 12px 24px -4px rgba(16, 185, 129, 0.5);
 }
 
-.fz-btn-auth-submit:disabled {
-  opacity: 0.6;
+.fz-btn-submit-gradient:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
-.fz-auth-footer {
+.fz-spinner-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fz-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── FOOTER DE LA TARJETA ── */
+.fz-pro-card-footer {
   text-align: center;
   margin-top: 20px;
   font-size: 13px;
   color: #64748b;
 }
 
-.fz-auth-link {
+.fz-link-action {
   background: none;
   border: none;
-  color: #10b981;
+  color: #059669;
   font-weight: 800;
   cursor: pointer;
   padding: 0;
+  transition: color 0.2s ease;
+}
+
+.fz-link-action:hover {
+  color: #10b981;
   text-decoration: underline;
+}
+
+.fz-security-badge-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* ===================================================
+   3. ADAPTABILIDAD AL MODO OSCURO GLOBAL (.dark-theme)
+   =================================================== */
+.dark-theme .fz-pro-card {
+  background: #0f172a;
+  border-color: #1e293b;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.dark-theme .fz-pro-card-header h2 {
+  color: #ffffff;
+}
+
+.dark-theme .fz-pro-card-header p {
+  color: #94a3b8;
+}
+
+.dark-theme .fz-pro-demo-section {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-theme .fz-demo-header-label {
+  color: #94a3b8;
+}
+
+.dark-theme .fz-divider-text::before,
+.dark-theme .fz-divider-text::after {
+  border-color: #334155;
+}
+
+.dark-theme .fz-pro-field label {
+  color: #e2e8f0;
+}
+
+.dark-theme .fz-input-icon-wrapper input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+.dark-theme .fz-input-icon-wrapper input:focus {
+  background: #1e293b;
+  border-color: #10b981;
+}
+
+.dark-theme .fz-security-badge-footer {
+  border-color: #1e293b;
+  color: #64748b;
+}
+
+/* ===================================================
+   4. RESPONSIVE (MÓVIL Y SIMULACIÓN)
+   =================================================== */
+@media (max-width: 900px) {
+  .fz-pro-auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fz-pro-auth-banner {
+    display: none;
+  }
+
+  .fz-pro-auth-card-side {
+    padding: 30px 16px;
+    background: #090d16;
+  }
+
+  .fz-pro-card {
+    padding: 32px 24px;
+    border-radius: 20px;
+  }
 }

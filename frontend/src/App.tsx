@@ -95,22 +95,44 @@ function App() {
   // Página independiente de Login
   if (vista === "login") {
     return (
-      <Login
-        onLoginSuccess={manejarLoginExitoso}
-        onSwitchToRegister={() => setVista("registro")}
-        onGoHome={() => setVista("landing")}
-      />
+      <div className={`app-device-wrapper ${tema === "oscuro" ? "dark-mode dark-theme" : ""} ${modoDispositivo === "celular" ? "sim-mobile-active" : "sim-desktop-active"}`}>
+        <div className="fz-screen-viewport">
+          <Login
+            onLoginSuccess={manejarLoginExitoso}
+            onSwitchToRegister={() => setVista("registro")}
+            onGoHome={() => setVista("landing")}
+          />
+        </div>
+        <ThemeJoystick
+          tema={tema}
+          onToggleTema={toggleTema}
+          onSetTema={setTemaManual}
+          modoDispositivo={modoDispositivo}
+          onCambiarModoDispositivo={setModoDispositivo}
+        />
+      </div>
     );
   }
 
   // Página independiente de Registro
   if (vista === "registro") {
     return (
-      <Registro
-        onRegisterSuccess={() => setVista("login")}
-        onSwitchToLogin={() => setVista("login")}
-        onGoHome={() => setVista("landing")}
-      />
+      <div className={`app-device-wrapper ${tema === "oscuro" ? "dark-mode dark-theme" : ""} ${modoDispositivo === "celular" ? "sim-mobile-active" : "sim-desktop-active"}`}>
+        <div className="fz-screen-viewport">
+          <Registro
+            onRegisterSuccess={() => setVista("login")}
+            onSwitchToLogin={() => setVista("login")}
+            onGoHome={() => setVista("landing")}
+          />
+        </div>
+        <ThemeJoystick
+          tema={tema}
+          onToggleTema={toggleTema}
+          onSetTema={setTemaManual}
+          modoDispositivo={modoDispositivo}
+          onCambiarModoDispositivo={setModoDispositivo}
+        />
+      </div>
     );
   }
 

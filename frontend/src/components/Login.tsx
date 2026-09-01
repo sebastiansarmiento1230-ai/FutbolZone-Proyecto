@@ -30,7 +30,7 @@ function Login({ onLoginSuccess, onSwitchToRegister, onGoHome }: LoginProps) {
   const manejarEnvio = async (e: FormEvent) => {
     e.preventDefault();
     if (!correo.trim() || !contrasena.trim()) {
-      setMensaje({ texto: "Por favor completa todos los campos", tipo: "error" });
+      setMensaje({ texto: "Por favor completa todos los campos requeridos.", tipo: "error" });
       return;
     }
 
@@ -42,17 +42,17 @@ function Login({ onLoginSuccess, onSwitchToRegister, onGoHome }: LoginProps) {
       if (res.success && res.data?.access_token) {
         setAuthToken(res.data.access_token);
         setStoredUser(res.data.usuario);
-        setMensaje({ texto: "Inicio de sesión exitoso", tipo: "exito" });
-        setTimeout(() => onLoginSuccess(res.data.usuario), 500);
+        setMensaje({ texto: "¡Bienvenido de nuevo! Iniciando sesión...", tipo: "exito" });
+        setTimeout(() => onLoginSuccess(res.data.usuario), 600);
       } else {
         setMensaje({
-          texto: res.message || "Credenciales incorrectas",
+          texto: res.message || "Credenciales incorrectas. Verifica tu correo y clave.",
           tipo: "error",
         });
       }
     } catch (err: any) {
       setMensaje({
-        texto: err.message || "Error al conectar con el servidor",
+        texto: err.message || "No se pudo conectar con el servidor.",
         tipo: "error",
       });
     } finally {
@@ -61,113 +61,219 @@ function Login({ onLoginSuccess, onSwitchToRegister, onGoHome }: LoginProps) {
   };
 
   return (
-    <section className="fz-auth-container">
-      <div className="fz-auth-phone-card">
-        {/* Cabecera Oscura Curva con Avatar */}
-        <div className="fz-auth-top-dark">
+    <div className="fz-pro-auth-layout">
+      {/* ── COLUMNA IZQUIERDA: SHOWCASE CORPORATIVO ── */}
+      <div className="fz-pro-auth-banner">
+        <div className="fz-banner-mesh-bg"></div>
+        <div className="fz-banner-glow-spot glow-1"></div>
+        <div className="fz-banner-glow-spot glow-2"></div>
+
+        <div className="fz-banner-top">
           {onGoHome && (
-            <button type="button" className="fz-auth-btn-back" onClick={onGoHome} title="Volver al Inicio">
-              ← Inicio
+            <button type="button" className="fz-btn-back-pill" onClick={onGoHome} title="Volver al Inicio">
+              <Icons.ArrowLeft size={16} />
+              <span>Volver al inicio</span>
             </button>
           )}
-          
-          <div className="fz-auth-avatar-circle">
-            <Icons.Ball size={32} color="#10b981" />
+          <div className="fz-banner-logo-badge">
+            <Icons.Ball size={20} color="#10b981" />
+            <span>FutbolZone ADSO</span>
           </div>
-          <span className="fz-auth-brand-tag">FutbolZone ADSO III</span>
         </div>
 
-        {/* Cuerpo Blanco con Formulario */}
-        <div className="fz-auth-body">
-          <div className="fz-auth-header-text">
+        <div className="fz-banner-center">
+          <span className="fz-tag-pill">⚡ Experiencia Deportiva Digital</span>
+          <h1 className="fz-banner-title">
+            Tu cancha sintética <br />
+            <span className="fz-text-gradient">a un solo clic.</span>
+          </h1>
+          <p className="fz-banner-desc">
+            Gestiona reservas en tiempo real, compite en torneos oficiales y organiza tus partidos sin esperas ni llamadas.
+          </p>
+
+          <div className="fz-banner-features-grid">
+            <div className="fz-feature-item">
+              <div className="fz-feature-icon-box">
+                <Icons.Calendar size={18} color="#10b981" />
+              </div>
+              <div>
+                <h4>Reserva en Vivo</h4>
+                <p>Disponibilidad 24/7 sin solapamientos</p>
+              </div>
+            </div>
+
+            <div className="fz-feature-item">
+              <div className="fz-feature-icon-box">
+                <Icons.Lightbulb size={18} color="#10b981" />
+              </div>
+              <div>
+                <h4>Iluminación LED</h4>
+                <p>Canchas 5, 7 y 11 profesionales</p>
+              </div>
+            </div>
+
+            <div className="fz-feature-item">
+              <div className="fz-feature-icon-box">
+                <Icons.Shield size={18} color="#10b981" />
+              </div>
+              <div>
+                <h4>Seguridad JWT</h4>
+                <p>Acceso cifrado y seguro para tus datos</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="fz-banner-footer">
+          <div className="fz-social-proof">
+            <div className="fz-stars-row">
+              <Icons.Star size={14} color="#f59e0b" />
+              <Icons.Star size={14} color="#f59e0b" />
+              <Icons.Star size={14} color="#f59e0b" />
+              <Icons.Star size={14} color="#f59e0b" />
+              <Icons.Star size={14} color="#f59e0b" />
+            </div>
+            <span><strong>4.9/5</strong> · Más de 2.500 partidos jugados</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── COLUMNA DERECHA: FORMULARIO ELEGANTE ── */}
+      <div className="fz-pro-auth-card-side">
+        <div className="fz-pro-card">
+          {/* Header del Formulario */}
+          <div className="fz-pro-card-header">
+            <div className="fz-brand-avatar-box">
+              <Icons.Ball size={28} color="#ffffff" />
+            </div>
             <h2>Iniciar Sesión</h2>
-            <p>Ingresa tus credenciales para acceder al sistema</p>
+            <p>Ingresa a tu cuenta para continuar en FutbolZone</p>
           </div>
 
-          {/* Acceso Rápido 1-Clic */}
-          <div className="fz-demo-box">
-            <span className="fz-demo-title">Acceso rápido con un clic:</span>
-            <div className="fz-demo-btn-group">
+          {/* Acceso Rápido 1-Clic para Demostración */}
+          <div className="fz-pro-demo-section">
+            <div className="fz-demo-header-label">
+              <Icons.Sparkles size={14} color="#10b981" />
+              <span>Accesos rápidos de demostración:</span>
+            </div>
+            <div className="fz-demo-pills-row">
               <button
                 type="button"
-                className="fz-demo-btn admin"
+                className="fz-demo-pill admin"
                 onClick={() => setDemoUser("admin@futbolzone.com", "admin123")}
               >
-                Administrador
+                👑 <span>Administrador</span>
               </button>
               <button
                 type="button"
-                className="fz-demo-btn cliente"
+                className="fz-demo-pill cliente"
                 onClick={() => setDemoUser("cliente@futbolzone.com", "cliente123")}
               >
-                Cliente
+                👤 <span>Cliente</span>
               </button>
             </div>
           </div>
 
-          <form onSubmit={manejarEnvio} className="fz-auth-form">
-            <div className="fz-input-group">
-              <label>Correo Electrónico</label>
-              <input
-                type="email"
-                value={correo}
-                onChange={manejarCorreo}
-                placeholder="tunombre@correo.com"
-                required
-              />
+          <div className="fz-divider-text">
+            <span>o ingresa con tu correo</span>
+          </div>
+
+          {/* Formulario */}
+          <form onSubmit={manejarEnvio} className="fz-pro-form">
+            <div className="fz-pro-field">
+              <label htmlFor="login-email">Correo Electrónico *</label>
+              <div className="fz-input-icon-wrapper">
+                <span className="fz-field-icon">
+                  <Icons.Mail size={18} color="#64748b" />
+                </span>
+                <input
+                  id="login-email"
+                  type="email"
+                  value={correo}
+                  onChange={manejarCorreo}
+                  placeholder="ejemplo@futbolzone.com"
+                  autoComplete="email"
+                  required
+                />
+              </div>
             </div>
 
-            <div className="fz-input-group">
-              <label>Contraseña</label>
-              <div className="fz-password-wrapper">
+            <div className="fz-pro-field">
+              <div className="fz-field-label-row">
+                <label htmlFor="login-password">Contraseña *</label>
+                <button
+                  type="button"
+                  className="fz-btn-forgot"
+                  onClick={() => setMostrarModalRecuperar(true)}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
+              <div className="fz-input-icon-wrapper">
+                <span className="fz-field-icon">
+                  <Icons.Lock size={18} color="#64748b" />
+                </span>
                 <input
+                  id="login-password"
                   type={mostrarContrasena ? "text" : "password"}
                   value={contrasena}
                   onChange={manejarContrasena}
-                  placeholder="••••••••"
+                  placeholder="Ingresa tu contraseña"
+                  autoComplete="current-password"
                   required
                 />
                 <button
                   type="button"
-                  className="fz-toggle-eye"
+                  className="fz-btn-eye"
                   onClick={() => setMostrarContrasena(!mostrarContrasena)}
+                  title={mostrarContrasena ? "Ocultar contraseña" : "Ver contraseña"}
+                  aria-label="Alternar visibilidad de contraseña"
                 >
-                  {mostrarContrasena ? "👁️‍🗨️" : "👁️"}
-                </button>
-              </div>
-
-              <div style={{ textAlign: "right", marginTop: "6px" }}>
-                <button
-                  type="button"
-                  onClick={() => setMostrarModalRecuperar(true)}
-                  style={{ background: "none", border: "none", color: "#10b981", fontSize: "12px", fontWeight: 700, cursor: "pointer", padding: 0 }}
-                >
-                  ¿Olvidaste tu contraseña? Restablécela aquí
+                  {mostrarContrasena ? (
+                    <Icons.EyeOff size={18} color="#64748b" />
+                  ) : (
+                    <Icons.Eye size={18} color="#64748b" />
+                  )}
                 </button>
               </div>
             </div>
 
             {mensaje && (
-              <div className={`fz-auth-alert ${mensaje.tipo}`}>
-                {mensaje.tipo === "exito" ? "✅" : "⚠️"} {mensaje.texto}
+              <div className={`fz-pro-alert ${mensaje.tipo}`} role="alert">
+                <span className="fz-alert-icon">
+                  {mensaje.tipo === "exito" ? <Icons.Check size={16} /> : "⚠️"}
+                </span>
+                <span>{mensaje.texto}</span>
               </div>
             )}
 
-            <button type="submit" className="fz-btn-auth-submit" disabled={cargando}>
-              {cargando ? "Iniciando sesión..." : "Ingresar a mi Cuenta"}
+            <button type="submit" className="fz-btn-submit-gradient" disabled={cargando}>
+              {cargando ? (
+                <span className="fz-spinner-row">
+                  <span className="fz-spinner"></span>
+                  <span>Verificando credenciales...</span>
+                </span>
+              ) : (
+                <span>Ingresar a mi Cuenta ➔</span>
+              )}
             </button>
           </form>
 
           {onSwitchToRegister && (
-            <div className="fz-auth-footer">
+            <div className="fz-pro-card-footer">
               <p>
-                ¿Aún no tienes una cuenta?{" "}
-                <button type="button" className="fz-auth-link" onClick={onSwitchToRegister}>
-                  Regístrate aquí
+                ¿Aún no tienes cuenta?{" "}
+                <button type="button" className="fz-link-action" onClick={onSwitchToRegister}>
+                  Regístrate gratis aquí
                 </button>
               </p>
             </div>
           )}
+
+          <div className="fz-security-badge-footer">
+            <Icons.Shield size={14} color="#10b981" />
+            <span>Conexión cifrada SSL · FutbolZone SENA ADSO III</span>
+          </div>
         </div>
       </div>
 
@@ -179,7 +285,7 @@ function Login({ onLoginSuccess, onSwitchToRegister, onGoHome }: LoginProps) {
           onSuccessLogin={() => setMostrarModalRecuperar(false)}
         />
       )}
-    </section>
+    </div>
   );
 }
 
