@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./NotificacionesPill.css";
 import { getStoredUser } from "../services/api";
-import { NotificacionItem } from "../services/notifications";
+import type { NotificacionItem } from "../services/notifications";
 
 interface NotificacionesPillProps {
   onNavigate?: (vista: string) => void;
