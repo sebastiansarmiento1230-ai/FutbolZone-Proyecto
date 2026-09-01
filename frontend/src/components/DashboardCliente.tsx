@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import "./DashboardCliente.css";
 import * as XLSX from "xlsx";
 import { api, setStoredUser } from "../services/api";
+import { notificarAdmin, notificarCliente } from "../services/notifications";
 import TicketReservaModal from "./TicketReservaModal";
 import TorneosView from "./TorneosView";
 import TablonRetos from "./TablonRetos";
@@ -55,7 +56,25 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
   const cancelarReserva = async (id: number) => {
     if (!confirm("¿Está seguro de que desea cancelar esta reserva?")) return;
     try {
+      const resCancelada = misReservas.find((r) => r.id === id);
       await api.cancelarReserva(id);
+      
+      // Notificar al administrador
+      notificarAdmin({
+        titulo: "Reserva Cancelada por Cliente",
+        mensaje: `${usuario?.nombre || "Un cliente"} ha cancelado su reserva en ${resCancelada?.cancha_nombre || "la cancha"} del ${resCancelada?.fecha || "la fecha agendada"}.`,
+        tipo: "reserva",
+        accionVista: "admin_dashboard",
+      });
+
+      // Notificar al cliente
+      notificarCliente(usuario?.id, {
+        titulo: "Turno Cancelado",
+        mensaje: `Tu reserva #${id} ha sido cancelada correctamente y el horario quedó disponible.`,
+        tipo: "reserva",
+        accionVista: "client_dashboard",
+      });
+
       setMensaje("Reserva cancelada con éxito.");
       cargarReservas();
       setTimeout(() => setMensaje(null), 3000);
@@ -137,6 +156,12 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
       if (res.success) {
         const usuarioActualizado = { ...usuario, nombre, apellido, telefono };
         setStoredUser(usuarioActualizado);
+        notificarCliente(usuario?.id, {
+          titulo: "Perfil y Datos Actualizados",
+          mensaje: "Tus datos personales y número de contacto fueron guardados correctamente.",
+          tipo: "seguridad",
+          accionVista: "client_dashboard",
+        });
         setMensajePerfil({ texto: "Perfil actualizado con éxito.", tipo: "exito" });
         setTimeout(() => setMensajePerfil(null), 3000);
       } else {

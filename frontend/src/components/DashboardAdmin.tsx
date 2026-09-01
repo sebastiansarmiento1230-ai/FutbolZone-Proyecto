@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./DashboardAdmin.css";
 import * as XLSX from "xlsx";
 import { api } from "../services/api";
+import { notificarAdmin, notificarCliente, notificarTodosLosUsuarios } from "../services/notifications";
 
 interface DashboardAdminProps {
   onLogout: () => void;
@@ -114,7 +115,55 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
 
   const cambiarEstadoReserva = async (id: number, nuevoEstado: string) => {
     try {
-      await api.actualizarReserva(id, { estado: nuevoEstado });
+      const res = await api.actualizarReserva(id, { estado: nuevoEstado });
+      if (res.success) {
+        const reservaModificada = reservas.find((r) => r.id === id);
+        const nomCancha = reservaModificada?.cancha_nombre || "la cancha";
+        const nomCliente = reservaModificada?.cliente || "Cliente";
+        const fechaRes = reservaModificada?.fecha || "la fecha agendada";
+        const usuarioId = reservaModificada?.usuario_id;
+
+        if (nuevoEstado === "confirmada") {
+          notificarCliente(usuarioId, {
+            titulo: "Reserva Confirmada por la Sede",
+            mensaje: `Tu reserva en ${nomCancha} para el ${fechaRes} ha sido CONFIRMADA. Te esperamos en la sede deportiva.`,
+            tipo: "reserva",
+            accionVista: "client_dashboard",
+          });
+          notificarAdmin({
+            titulo: "Reserva Aprobada",
+            mensaje: `Se ha confirmado exitosamente la reserva #${id} (${nomCliente}).`,
+            tipo: "reserva",
+            accionVista: "admin_dashboard",
+          });
+        } else if (nuevoEstado === "completada") {
+          notificarCliente(usuarioId, {
+            titulo: "Partido Finalizado",
+            mensaje: `¡Gracias por jugar en FutbolZone! Tu partido en ${nomCancha} fue registrado como completado (+150 Puntos Zone).`,
+            tipo: "reserva",
+            accionVista: "client_dashboard",
+          });
+          notificarAdmin({
+            titulo: "Partido Liquidado",
+            mensaje: `La reserva #${id} (${nomCancha}) ha sido completada y liquidada.`,
+            tipo: "reserva",
+            accionVista: "admin_dashboard",
+          });
+        } else if (nuevoEstado === "cancelada") {
+          notificarCliente(usuarioId, {
+            titulo: "Reserva Cancelada",
+            mensaje: `Tu turno para el ${fechaRes} en ${nomCancha} fue cancelado por la administración.`,
+            tipo: "reserva",
+            accionVista: "client_dashboard",
+          });
+          notificarAdmin({
+            titulo: "Reserva Cancelada",
+            mensaje: `Se canceló la reserva #${id} (${nomCliente}). El horario ha quedado disponible.`,
+            tipo: "reserva",
+            accionVista: "admin_dashboard",
+          });
+        }
+      }
       cargarDatosAdmin();
     } catch (err: any) {
       alert("Error actualizando estado: " + err.message);
@@ -187,6 +236,11 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
         titulo: tituloAnuncio,
         mensaje: mensajeAnuncio,
         activo: anuncioActivo,
+      });
+      notificarTodosLosUsuarios({
+        titulo: `Comunicado: ${tituloAnuncio}`,
+        mensaje: mensajeAnuncio,
+        tipo: "promocion",
       });
       setMensajeAnuncioConfirm("El comunicado ha sido actualizado y publicado en toda la plataforma.");
       setTimeout(() => setMensajeAnuncioConfirm(null), 3500);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./ReservaCancha.css";
 import { api, getStoredUser } from "../services/api";
+import { notificarAdmin, notificarCliente } from "../services/notifications";
 
 interface ReservaCanchaProps {
   cancha: any;
@@ -144,6 +145,22 @@ function ReservaCancha({ cancha, onGoBack, onReservationCreated, onRequireLogin 
       });
 
       if (res.success) {
+        // Notificar en el buzón del cliente
+        notificarCliente(usuario?.id, {
+          titulo: "Reserva Creada Exitosamente",
+          mensaje: `Has agendado ${cancha?.nombre || "Cancha Central"} para el ${fecha} (${bloqueSeleccionado.inicio.substring(0, 5)} - ${hFinCalculada.substring(0, 5)}). Total a pagar: $${totalPagar.toLocaleString("es-CO")} COP.`,
+          tipo: "reserva",
+          accionVista: "client_dashboard",
+        });
+
+        // Notificar en el buzón del administrador
+        notificarAdmin({
+          titulo: "Nueva Reserva Registrada",
+          mensaje: `${usuario?.nombre || "Cliente"} ha reservado ${cancha?.nombre || "Cancha Central"} para el ${fecha} (${bloqueSeleccionado.inicio.substring(0, 5)}). Liquidación: $${totalPagar.toLocaleString("es-CO")} COP.`,
+          tipo: "reserva",
+          accionVista: "admin_dashboard",
+        });
+
         setMensaje({
           texto: "¡Reserva realizada con éxito! Redirigiendo a tu panel...",
           tipo: "exito",

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import "./Registro.css";
 import { api } from "../services/api";
+import { notificarAdmin } from "../services/notifications";
 import Icons from "./Icons";
 
 interface RegistroProps {
@@ -112,6 +113,13 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
       });
 
       if (res.success) {
+        notificarAdmin({
+          titulo: "Nuevo Cliente Registrado",
+          mensaje: `Se ha registrado ${nombre.trim()} ${apellido.trim()} (${correo.trim()}) en la plataforma.`,
+          tipo: "sistema",
+          accionVista: "admin_dashboard",
+        });
+
         setMensaje({
           texto: "¡Cuenta creada exitosamente! Redirigiendo al inicio de sesión...",
           tipo: "exito",
