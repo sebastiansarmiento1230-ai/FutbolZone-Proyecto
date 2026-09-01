@@ -35,6 +35,8 @@ function ReservaCancha({ cancha, onGoBack, onReservationCreated, onRequireLogin 
     ocupados: [],
   });
   const [bloqueSeleccionado, setBloqueSeleccionado] = useState<any | null>(null);
+  const [aceptaCondicionesCancha, setAceptaCondicionesCancha] = useState<boolean>(false);
+  const [mostrarModalReglamento, setMostrarModalReglamento] = useState<boolean>(false);
   const [cargandoDisp, setCargandoDisp] = useState<boolean>(false);
   const [reservando, setReservando] = useState<boolean>(false);
   const [mensaje, setMensaje] = useState<{ texto: string; tipo: "exito" | "error" } | null>(null);
@@ -110,6 +112,14 @@ function ReservaCancha({ cancha, onGoBack, onReservationCreated, onRequireLogin 
 
     if (!bloqueSeleccionado) {
       setMensaje({ texto: "Por favor selecciona un horario para tu partido.", tipo: "error" });
+      return;
+    }
+
+    if (!aceptaCondicionesCancha) {
+      setMensaje({
+        texto: "Debes aceptar el reglamento y las condiciones de uso de la cancha para continuar.",
+        tipo: "error",
+      });
       return;
     }
 
@@ -545,6 +555,28 @@ function ReservaCancha({ cancha, onGoBack, onReservationCreated, onRequireLogin 
                 )}
               </form>
 
+              {/* Checkbox de Condiciones de Uso de la Cancha */}
+              <div className="fz-booking-terms-box">
+                <label className="fz-booking-terms-label">
+                  <input
+                    type="checkbox"
+                    checked={aceptaCondicionesCancha}
+                    onChange={(e) => setAceptaCondicionesCancha(e.target.checked)}
+                  />
+                  <span>
+                    Acepto el{" "}
+                    <button
+                      type="button"
+                      className="fz-link-terms-button"
+                      onClick={() => setMostrarModalReglamento(true)}
+                    >
+                      Reglamento Oficial y Condiciones de Uso
+                    </button>{" "}
+                    de la cancha sintética. *
+                  </span>
+                </label>
+              </div>
+
               {mensaje && (
                 <div className={`fz-booking-alert ${mensaje.tipo}`}>
                   {mensaje.tipo === "exito" ? "✅" : "⚠️"} {mensaje.texto}
@@ -554,7 +586,7 @@ function ReservaCancha({ cancha, onGoBack, onReservationCreated, onRequireLogin 
               <button
                 type="button"
                 className="fz-btn-confirm-booking"
-                disabled={reservando || !bloqueSeleccionado}
+                disabled={reservando || !bloqueSeleccionado || !aceptaCondicionesCancha}
                 onClick={confirmarReserva}
               >
                 {reservando ? "Confirmando Turno..." : "⚽ Confirmar y Reservar Ahora"}
@@ -567,6 +599,72 @@ function ReservaCancha({ cancha, onGoBack, onReservationCreated, onRequireLogin 
           </div>
         </div>
       </div>
+
+      {/* 📋 MODAL DE REGLAMENTO Y CONDICIONES DE USO DE LA CANCHA */}
+      {mostrarModalReglamento && (
+        <div className="fz-modal-backdrop-terms" onClick={() => setMostrarModalReglamento(false)}>
+          <div className="fz-modal-content-terms" onClick={(e) => e.stopPropagation()}>
+            <div className="fz-modal-terms-header">
+              <div className="fz-modal-terms-icon" style={{ background: "rgba(16, 185, 129, 0.15)", borderColor: "#10b981" }}>
+                ⚽
+              </div>
+              <div>
+                <h3>Reglamento Oficial y Condiciones de Uso</h3>
+                <p>Complejo Deportivo FutbolZone — Normas de Convivencia y Seguridad</p>
+              </div>
+              <button
+                type="button"
+                className="fz-modal-btn-close"
+                onClick={() => setMostrarModalReglamento(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="fz-modal-terms-body">
+              <h4>👟 1. Calzado Adecuado Obligatorio</h4>
+              <p>
+                Para proteger el césped sintético y evitar lesiones, solo se permite el uso de <strong>calzado de torretas (TF)</strong> o <strong>suela de goma plana (IC)</strong>. Está estrictamente prohibido el uso de guayos con taches metálicos o de aluminio.
+              </p>
+
+              <h4>⏰ 2. Puntualidad en el Horario Agendado</h4>
+              <p>
+                El turno de juego comienza y finaliza puntualmente en los horarios registrados. Se recomienda llegar con <strong>15 minutos de anticipación</strong> para alistamiento en vestuarios.
+              </p>
+
+              <h4>🚫 3. Prohibiciones en el Campo de Juego</h4>
+              <ul>
+                <li>Prohibido ingresar con bebidas alcohólicas, chicles, alimentos o envases de vidrio al césped.</li>
+                <li>Prohibido fumar o portar sustancias psicoactivas dentro de las instalaciones.</li>
+                <li>Cero tolerancia a actos de violencia verbal o física. El equipo causante será sancionado y expulsado.</li>
+              </ul>
+
+              <h4>🔄 4. Política de Cancelación y Reembolsos</h4>
+              <p>
+                Puedes cancelar o reprogramar tu reserva sin costo alguno hasta con <strong>2 horas de anticipación</strong> desde tu panel de <em>Mis Reservas</em>.
+              </p>
+
+              <h4>🛡️ 5. Cuidado de Instalaciones e Implementos</h4>
+              <p>
+                Los usuarios son responsables del cuidado de los balones, petos y graderías suministradas durante el encuentro.
+              </p>
+            </div>
+
+            <div className="fz-modal-terms-footer">
+              <button
+                type="button"
+                className="fz-btn-accept-terms"
+                onClick={() => {
+                  setAceptaCondicionesCancha(true);
+                  setMostrarModalReglamento(false);
+                }}
+              >
+                Aceptar Condiciones y Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

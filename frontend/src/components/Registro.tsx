@@ -18,6 +18,8 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [mostrarPassword, setMostrarPassword] = useState<boolean>(false);
   const [mostrarConfirmPassword, setMostrarConfirmPassword] = useState<boolean>(false);
+  const [aceptaTratamientoDatos, setAceptaTratamientoDatos] = useState<boolean>(false);
+  const [mostrarModalHabeasData, setMostrarModalHabeasData] = useState<boolean>(false);
   const [cargando, setCargando] = useState<boolean>(false);
   const [mensaje, setMensaje] = useState<{ texto: string; tipo: "exito" | "error" } | null>(null);
 
@@ -60,6 +62,14 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
 
     if (!nombre.trim() || !apellido.trim() || !correo.trim() || !password || !confirmPassword) {
       setMensaje({ texto: "Por favor completa todos los campos obligatorios.", tipo: "error" });
+      return;
+    }
+
+    if (!aceptaTratamientoDatos) {
+      setMensaje({
+        texto: "Debes autorizar el tratamiento de datos personales (Ley 1581) para completar el registro.",
+        tipo: "error",
+      });
       return;
     }
 
@@ -177,8 +187,8 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
                 <Icons.Shield size={18} color="#10b981" />
               </div>
               <div>
-                <h4>Notificaciones por Correo</h4>
-                <p>Confirmaciones de reserva directas a tu Gmail</p>
+                <h4>Protección de Datos</h4>
+                <p>Habeas Data conforme a la Ley 1581 de 2012</p>
               </div>
             </div>
           </div>
@@ -193,7 +203,7 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
               <Icons.Star size={14} color="#f59e0b" />
               <Icons.Star size={14} color="#f59e0b" />
             </div>
-            <span><strong>100% Gratuito</strong> · Registro rápido y sin trámites</span>
+            <span><strong>100% Seguro</strong> · Tratamiento ético y confidencial de datos</span>
           </div>
         </div>
       </div>
@@ -206,7 +216,7 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
               <Icons.User size={28} color="#ffffff" />
             </div>
             <h2>Crear Cuenta</h2>
-            <p>Diligencia tus datos para registrarte como cliente</p>
+            <p>Diligencia tus datos para registrarte como cliente en la plataforma</p>
           </div>
 
           <form onSubmit={manejarEnvio} className="fz-pro-form">
@@ -379,6 +389,29 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
               </span>
             </div>
 
+            {/* 📋 AUTORIZACIÓN DE TRATAMIENTO DE DATOS (HABEAS DATA - LEY 1581) */}
+            <div className="fz-terms-checkbox-box">
+              <label className="fz-terms-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={aceptaTratamientoDatos}
+                  onChange={(e) => setAceptaTratamientoDatos(e.target.checked)}
+                  required
+                />
+                <span className="fz-terms-text">
+                  Autorizo expresamente el{" "}
+                  <button
+                    type="button"
+                    className="fz-link-terms-modal"
+                    onClick={() => setMostrarModalHabeasData(true)}
+                  >
+                    Tratamiento de Datos Personales (Ley 1581 de 2012)
+                  </button>{" "}
+                  y acepto la Política de Privacidad de FutbolZone. *
+                </span>
+              </label>
+            </div>
+
             {mensaje && (
               <div className={`fz-pro-alert ${mensaje.tipo}`} role="alert">
                 <span className="fz-alert-icon">
@@ -388,7 +421,11 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
               </div>
             )}
 
-            <button type="submit" className="fz-btn-submit-gradient" disabled={cargando}>
+            <button
+              type="submit"
+              className="fz-btn-submit-gradient"
+              disabled={cargando || !aceptaTratamientoDatos}
+            >
               {cargando ? (
                 <span className="fz-spinner-row">
                   <span className="fz-spinner"></span>
@@ -413,10 +450,73 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
 
           <div className="fz-security-badge-footer">
             <Icons.Shield size={14} color="#10b981" />
-            <span>Registro protegido por cifrado SSL · FutbolZone SENA ADSO III</span>
+            <span>Registro protegido por cifrado SSL · Habeas Data Ley 1581 de 2012</span>
           </div>
         </div>
       </div>
+
+      {/* 📄 MODAL INTERACTIVO: POLÍTICA DE TRATAMIENTO DE DATOS (HABEAS DATA) */}
+      {mostrarModalHabeasData && (
+        <div className="fz-modal-backdrop-terms" onClick={() => setMostrarModalHabeasData(false)}>
+          <div className="fz-modal-content-terms" onClick={(e) => e.stopPropagation()}>
+            <div className="fz-modal-terms-header">
+              <div className="fz-modal-terms-icon">
+                <Icons.Shield size={24} color="#10b981" />
+              </div>
+              <div>
+                <h3>Autorización de Tratamiento de Datos Personales</h3>
+                <p>Conforme a la Ley Estatutaria 1581 de 2012 y Decreto 1377 de 2013 (Colombia)</p>
+              </div>
+              <button
+                type="button"
+                className="fz-modal-btn-close"
+                onClick={() => setMostrarModalHabeasData(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="fz-modal-terms-body">
+              <h4>1. Responsable del Tratamiento</h4>
+              <p>
+                <strong>FutbolZone S.A.S. / Proyecto Formativo SENA ADSO</strong>, en calidad de Responsable del Tratamiento de Datos Personales, garantiza la confidencialidad, seguridad y custodia de la información recolectada de los usuarios registrados.
+              </p>
+
+              <h4>2. Finalidades de la Recolección</h4>
+              <p>Los datos suministrados (Nombre, Correo electrónico, Teléfono celular y Registros de reserva) serán utilizados exclusivamente para:</p>
+              <ul>
+                <li>Gestionar el agendamiento y disponibilidad de canchas sintéticas en tiempo real.</li>
+                <li>Enviar comprobantes de reserva, alertas de confirmación y pines de seguridad vía correo electrónico (Gmail SMTP).</li>
+                <li>Coordinar inscripciones a torneos deportivos y eventos del complejo.</li>
+                <li>Generar reportes estadísticos agregados y auditoría de seguridad del sistema.</li>
+              </ul>
+
+              <h4>3. Derechos del Titular (Habeas Data)</h4>
+              <p>
+                Como titular de los datos personales, tienes derecho a <strong>conocer, actualizar, rectificar y solicitar la supresión</strong> de tu información en cualquier momento a través de tu panel de usuario o comunicándote con los administradores de la sede.
+              </p>
+
+              <h4>4. Seguridad y No Cesión a Terceros</h4>
+              <p>
+                FutbolZone no vende, cede ni comercializa tus datos con terceros bajo ninguna circunstancia. Todas las contraseñas se almacenan cifradas con algoritmos de hashing seguro (Bcrypt).
+              </p>
+            </div>
+
+            <div className="fz-modal-terms-footer">
+              <button
+                type="button"
+                className="fz-btn-accept-terms"
+                onClick={() => {
+                  setAceptaTratamientoDatos(true);
+                  setMostrarModalHabeasData(false);
+                }}
+              >
+                Entendido y Acepto los Términos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
