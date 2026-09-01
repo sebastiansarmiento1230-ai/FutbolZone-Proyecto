@@ -306,10 +306,12 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
       {/* ── BARRA LATERAL (SIDEBAR CORPORATIVO) ── */}
       <aside className="fz-sidebar">
         <div className="fz-sidebar-user">
-          <div className="fz-avatar-halo">
-            <div className="fz-avatar-initials">
-              <span>FZ</span>
-            </div>
+          <div className="fz-avatar-halo" style={{ background: "transparent", boxShadow: "none", width: "auto", height: "auto" }}>
+            <img
+              src="/logo-futbolzone.png"
+              alt="Logo FutbolZone"
+              style={{ width: "68px", height: "68px", objectFit: "contain", margin: "0 auto 8px" }}
+            />
           </div>
           <h3 className="fz-user-name">ADMINISTRACIÓN</h3>
           <p className="fz-user-email">admin@futbolzone.com</p>

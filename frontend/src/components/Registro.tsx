@@ -165,10 +165,14 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
 
         {/* Cabecera de la Tarjeta */}
         <div className="fz-floating-card-header">
-          <div className="fz-brand-avatar-box">
-            <Icons.User size={28} color="#ffffff" />
+          <div className="fz-brand-avatar-box" style={{ background: "transparent", border: "none", boxShadow: "none", width: "auto", height: "auto" }}>
+            <img
+              src="/logo-futbolzone.png"
+              alt="Logo FutbolZone"
+              style={{ width: "70px", height: "70px", objectFit: "contain" }}
+            />
           </div>
-          <span className="fz-brand-pill-tag">✨ Registro de Cliente</span>
+          <span className="fz-brand-pill-tag">Registro de Cliente</span>
           <h2>Crear Cuenta</h2>
           <p>Diligencia tus datos para registrarte en FutbolZone</p>
         </div>

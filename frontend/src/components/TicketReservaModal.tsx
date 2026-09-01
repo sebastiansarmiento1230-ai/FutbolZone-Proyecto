@@ -115,8 +115,13 @@ function TicketReservaModal({ reserva, usuario, onClose }: TicketReservaModalPro
 
         {/* CONTENIDO IMPRIMIBLE DEL TICKET */}
         <div className="ticket-printable-content">
-          <div className="ticket-header">
-            <h2>⚽ FutbolZone</h2>
+          <div className="ticket-header" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <img
+              src="/logo-futbolzone.png"
+              alt="Logo FutbolZone"
+              style={{ width: "52px", height: "52px", objectFit: "contain", marginBottom: "6px" }}
+            />
+            <h2>FutbolZone</h2>
             <span className="ticket-badge-official">COMPROBANTE OFICIAL DE RESERVA</span>
             <p className="ticket-sub">Complejo Deportivo & Canchas Sintéticas</p>
           </div>

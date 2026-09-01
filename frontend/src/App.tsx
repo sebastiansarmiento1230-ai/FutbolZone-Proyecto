@@ -148,8 +148,12 @@ function App() {
 
           {/* HEADER */}
           <header className="header-zone">
-            <div className="logo" onClick={() => setVista("landing")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Icons.Ball size={26} color="#10b981" />
+            <div className="logo" onClick={() => setVista("landing")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}>
+              <img
+                src="/logo-futbolzone.png"
+                alt="Logo FutbolZone"
+                style={{ width: "38px", height: "38px", objectFit: "contain", borderRadius: "8px" }}
+              />
               <h1 style={{ margin: 0 }}>Futbol<span>Zone</span></h1>
             </div>
 
@@ -377,7 +381,12 @@ function App() {
 
       {/* FOOTER */}
       <footer>
-        <div className="footer-content">
+        <div className="footer-content" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+          <img
+            src="/logo-futbolzone.png"
+            alt="FutbolZone"
+            style={{ width: "48px", height: "48px", objectFit: "contain", borderRadius: "10px" }}
+          />
           <p>© 2026 FutbolZone · Sistema de Gestión Deportiva.</p>
           <p>Proyecto Formativo SENA ADSO III Trimestre · Nicolas Felipe Paz Ortiz</p>
         </div>

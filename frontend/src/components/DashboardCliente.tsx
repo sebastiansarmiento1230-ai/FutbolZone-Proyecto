@@ -198,6 +198,15 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
     <div className="fz-client-layout">
       {/* ── SIDEBAR CORPORATIVO DEL CLIENTE ── */}
       <aside className="fz-client-sidebar">
+        <div style={{ textAlign: "center", marginBottom: "16px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+          <img
+            src="/logo-futbolzone.png"
+            alt="FutbolZone"
+            style={{ width: "32px", height: "32px", objectFit: "contain" }}
+          />
+          <strong style={{ fontSize: "14px", color: "#ffffff", letterSpacing: "0.5px" }}>FUTBOLZONE</strong>
+        </div>
+
         <div className="fz-client-user-box">
           <div
             className="fz-client-avatar-halo"

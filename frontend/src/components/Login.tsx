@@ -87,10 +87,14 @@ function Login({ onLoginSuccess, onSwitchToRegister, onGoHome }: LoginProps) {
 
         {/* Cabecera de la Tarjeta Flotante */}
         <div className="fz-floating-card-header">
-          <div className="fz-brand-avatar-box">
-            <Icons.Ball size={28} color="#ffffff" />
+          <div className="fz-brand-avatar-box" style={{ background: "transparent", border: "none", boxShadow: "none", width: "auto", height: "auto" }}>
+            <img
+              src="/logo-futbolzone.png"
+              alt="Logo FutbolZone"
+              style={{ width: "70px", height: "70px", objectFit: "contain" }}
+            />
           </div>
-          <span className="fz-brand-pill-tag">⚡ FutbolZone ADSO III</span>
+          <span className="fz-brand-pill-tag">FutbolZone ADSO III</span>
           <h2>Iniciar Sesión</h2>
           <p>Ingresa tus credenciales para acceder a tus reservas</p>
         </div>
