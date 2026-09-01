@@ -31,6 +31,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
     tipo: "Fútbol 5",
     precio_hora: 50000,
     capacidad_jugadores: 10,
+    direccion: "Calle 63 # 28-45, Sede Central (El Campín)",
     descripcion: "",
   });
   const [mostrarFormCancha, setMostrarFormCancha] = useState<boolean>(false);
@@ -39,13 +40,14 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
   const [nuevoEmpleado, setNuevoEmpleado] = useState({
     nombre: "",
     apellido: "",
-    cargo: "Coordinador",
+    cargo: "Coordinador de Sede",
     telefono: "",
     email: "",
   });
   const [mostrarFormEmpleado, setMostrarFormEmpleado] = useState<boolean>(false);
 
-  // Mes interactivo para el mini-calendario
+  // Período de Métricas
+  const [periodoMetricas, setPeriodoMetricas] = useState<"semana" | "mes" | "ano">("mes");
   const [mesActual] = useState<string>("Agosto 2026");
 
   useEffect(() => {
@@ -78,19 +80,19 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
     try {
       const res = await api.crearCancha(nuevaCancha);
       if (res.success) {
-        alert("¡Cancha creada correctamente!");
         setMostrarFormCancha(false);
         setNuevaCancha({
           nombre: "",
           tipo: "Fútbol 5",
           precio_hora: 50000,
           capacidad_jugadores: 10,
+          direccion: "Calle 63 # 28-45, Sede Central (El Campín)",
           descripcion: "",
         });
         cargarDatosAdmin();
       }
     } catch (err: any) {
-      alert("Error al crear cancha: " + err.message);
+      alert("Error al registrar cancha: " + err.message);
     }
   };
 
@@ -100,9 +102,8 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
       if (api.crearEmpleado) {
         const res = await api.crearEmpleado(nuevoEmpleado);
         if (res.success) {
-          alert("¡Empleado registrado exitosamente!");
           setMostrarFormEmpleado(false);
-          setNuevoEmpleado({ nombre: "", apellido: "", cargo: "Coordinador", telefono: "", email: "" });
+          setNuevoEmpleado({ nombre: "", apellido: "", cargo: "Coordinador de Sede", telefono: "", email: "" });
           cargarDatosAdmin();
         }
       }
@@ -116,7 +117,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
       await api.actualizarReserva(id, { estado: nuevoEstado });
       cargarDatosAdmin();
     } catch (err: any) {
-      alert("Error actualizando estado de reserva: " + err.message);
+      alert("Error actualizando estado: " + err.message);
     }
   };
 
@@ -130,12 +131,12 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
       await api.actualizarCancha(cancha.id, { activa: nuevoEstado });
       cargarDatosAdmin();
     } catch (err: any) {
-      alert("Error al cambiar estado de la cancha: " + err.message);
+      alert("Error al modificar estado de la cancha: " + err.message);
     }
   };
 
   const eliminarCancha = async (id: number) => {
-    if (!confirm("¿Está seguro de eliminar esta cancha?")) return;
+    if (!confirm("¿Confirma la eliminación del registro de esta cancha?")) return;
     try {
       await api.eliminarCancha(id);
       cargarDatosAdmin();
@@ -156,16 +157,15 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
         "Total COP": Number(r.precio_total) || 50000,
         "Método de Pago": metodo,
         "Estado": r.estado?.toUpperCase(),
-        "Detalles / Notas": r.notas || "Turno estándar",
+        "Detalles": r.notas || "Turno estándar",
       };
     });
 
     const worksheet = XLSX.utils.json_to_sheet(dataFilas);
-    // Configurar anchos de columna automáticos
     worksheet["!cols"] = [
       { wch: 8 },  // ID
-      { wch: 22 }, // Cliente
-      { wch: 20 }, // Cancha
+      { wch: 24 }, // Cliente
+      { wch: 22 }, // Cancha
       { wch: 14 }, // Fecha
       { wch: 16 }, // Horario
       { wch: 14 }, // Total COP
@@ -176,13 +176,8 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Reservas FutbolZone");
-
     const fechaHoy = new Date().toISOString().split("T")[0];
     XLSX.writeFile(workbook, `Reporte_Reservas_FutbolZone_${fechaHoy}.xlsx`);
-  };
-
-  const imprimirReporteFinanciero = () => {
-    window.print();
   };
 
   const guardarAnuncioGlobal = (e: React.FormEvent) => {
@@ -193,14 +188,12 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
         mensaje: mensajeAnuncio,
         activo: anuncioActivo,
       });
-      setMensajeAnuncioConfirm("¡Anuncio actualizado y visible en toda la plataforma!");
+      setMensajeAnuncioConfirm("El comunicado ha sido actualizado y publicado en toda la plataforma.");
       setTimeout(() => setMensajeAnuncioConfirm(null), 3500);
     }
   };
 
-  const [periodoMetricas, setPeriodoMetricas] = useState<"semana" | "mes" | "ano">("mes");
-
-  // Cálculos de métricas según el período seleccionado
+  // Cálculos de métricas
   let totalIngresos = reservas
     .filter((r) => r.estado === "confirmada" || r.estado === "completada")
     .reduce((sum, r) => sum + (Number(r.precio_total) || 50000), 0);
@@ -244,7 +237,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
       { label: "2023", v1: 40, v2: 60 },
       { label: "2024", v1: 65, v2: 35 },
       { label: "2025", v1: 82, v2: 18 },
-      { label: "2026 (Act)", v1: 94, v2: 6 },
+      { label: "2026", v1: 94, v2: 6 },
     ];
   }
 
@@ -256,17 +249,17 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
 
   return (
     <div className="fz-dashboard-layout">
-      {/* ── BARRA LATERAL (SIDEBAR) ── */}
+      {/* ── BARRA LATERAL (SIDEBAR CORPORATIVO) ── */}
       <aside className="fz-sidebar">
         <div className="fz-sidebar-user">
           <div className="fz-avatar-halo">
-            <div className="fz-avatar-circle">
-              <span>👑</span>
+            <div className="fz-avatar-initials">
+              <span>FZ</span>
             </div>
           </div>
-          <h3 className="fz-user-name">ADMINISTRADOR</h3>
+          <h3 className="fz-user-name">ADMINISTRACIÓN</h3>
           <p className="fz-user-email">admin@futbolzone.com</p>
-          <span className="fz-user-badge">FUTBOLZONE PRO</span>
+          <span className="fz-user-badge">ROL ADMINISTRADOR</span>
         </div>
 
         <nav className="fz-nav-menu">
@@ -275,8 +268,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             className={`fz-nav-item ${tabActiva === "metricas" ? "active" : ""}`}
             onClick={() => setTabActiva("metricas")}
           >
-            <span className="fz-nav-icon">📊</span>
-            <span className="fz-nav-label">Inicio / Métricas</span>
+            <span className="fz-nav-label">Métricas y Rendimiento</span>
           </button>
 
           <button
@@ -284,7 +276,6 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             className={`fz-nav-item ${tabActiva === "canchas" ? "active" : ""}`}
             onClick={() => setTabActiva("canchas")}
           >
-            <span className="fz-nav-icon">⚽</span>
             <span className="fz-nav-label">Canchas ({canchas.length})</span>
           </button>
 
@@ -293,7 +284,6 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             className={`fz-nav-item ${tabActiva === "reservas" ? "active" : ""}`}
             onClick={() => setTabActiva("reservas")}
           >
-            <span className="fz-nav-icon">📅</span>
             <span className="fz-nav-label">Reservas ({reservas.length})</span>
           </button>
 
@@ -302,8 +292,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             className={`fz-nav-item ${tabActiva === "usuarios" ? "active" : ""}`}
             onClick={() => setTabActiva("usuarios")}
           >
-            <span className="fz-nav-icon">👥</span>
-            <span className="fz-nav-label">Clientes ({usuarios.length})</span>
+            <span className="fz-nav-label">Directorio de Clientes ({usuarios.length})</span>
           </button>
 
           <button
@@ -311,8 +300,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             className={`fz-nav-item ${tabActiva === "empleados" ? "active" : ""}`}
             onClick={() => setTabActiva("empleados")}
           >
-            <span className="fz-nav-icon">👔</span>
-            <span className="fz-nav-label">Personal / Staff</span>
+            <span className="fz-nav-label">Personal y Staff ({empleados.length})</span>
           </button>
 
           <button
@@ -320,14 +308,13 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             className={`fz-nav-item ${tabActiva === "anuncios" ? "active" : ""}`}
             onClick={() => setTabActiva("anuncios")}
           >
-            <span className="fz-nav-icon">📢</span>
-            <span className="fz-nav-label">Anuncios en Vivo</span>
+            <span className="fz-nav-label">Comunicados en Vivo</span>
           </button>
         </nav>
 
         <div className="fz-sidebar-footer">
           <button type="button" className="fz-logout-btn" onClick={onLogout}>
-            <span>🚪</span> Cerrar Sesión
+            Cerrar Sesión
           </button>
         </div>
       </aside>
@@ -339,14 +326,14 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           <div>
             <div className="fz-breadcrumb">Panel de Control › FutbolZone ADSO III</div>
             <h1 className="fz-main-title">
-              {tabActiva === "metricas" && "Métricas & Rendimiento General"}
+              {tabActiva === "metricas" && "Métricas y Rendimiento Operativo"}
               {tabActiva === "canchas" && "Gestión de Canchas Sintéticas"}
-              {tabActiva === "reservas" && "Control y Estado de Reservas"}
+              {tabActiva === "reservas" && "Control y Liquidación de Reservas"}
               {tabActiva === "usuarios" && "Directorio de Clientes Registrados"}
-              {tabActiva === "empleados" && "Equipo y Personal de Mantenimiento"}
-              {tabActiva === "anuncios" && "Configuración de Anuncios Globales"}
+              {tabActiva === "empleados" && "Equipo y Personal de Sede"}
+              {tabActiva === "anuncios" && "Comunicados y Anuncios de la Sede"}
             </h1>
-            {cargando && <div style={{ fontSize: "12px", color: "#10b981", fontWeight: 700, marginTop: "4px" }}>● Sincronizando datos...</div>}
+            {cargando && <div className="fz-sync-status">Sincronizando base de datos en tiempo real...</div>}
           </div>
 
           <div className="fz-header-actions">
@@ -356,7 +343,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                 className="fz-btn-primary"
                 onClick={() => setMostrarFormCancha(!mostrarFormCancha)}
               >
-                {mostrarFormCancha ? "✕ Cancelar" : "+ Nueva Cancha"}
+                {mostrarFormCancha ? "Cancelar" : "+ Registrar Cancha"}
               </button>
             )}
 
@@ -366,113 +353,107 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                 className="fz-btn-primary"
                 onClick={() => setMostrarFormEmpleado(!mostrarFormEmpleado)}
               >
-                {mostrarFormEmpleado ? "✕ Cancelar" : "+ Nuevo Empleado"}
+                {mostrarFormEmpleado ? "Cancelar" : "+ Registrar Personal"}
               </button>
             )}
 
             <button type="button" className="fz-btn-refresh" onClick={cargarDatosAdmin} title="Recargar datos">
-              🔄 Refrescar
+              Actualizar Datos
             </button>
           </div>
         </header>
 
-        {/* ── VISTA 1: MÉTRICAS Y GRÁFICOS (ESTILO REFERENCIA VISUAL) ── */}
+        {/* ── VISTA 1: MÉTRICAS Y DASHBOARD EJECUTIVO ── */}
         {tabActiva === "metricas" && (
           <div className="fz-dashboard-view">
             {/* Selector de Período Temporal */}
             <div className="fz-time-filter-container">
-              <span className="fz-time-label">⏱️ Período de Métricas:</span>
+              <span className="fz-time-label">Período de Análisis:</span>
               <div className="fz-time-pills">
                 <button
                   type="button"
                   className={`fz-time-pill ${periodoMetricas === "semana" ? "active" : ""}`}
                   onClick={() => setPeriodoMetricas("semana")}
                 >
-                  📅 Esta Semana
+                  Semanal
                 </button>
                 <button
                   type="button"
                   className={`fz-time-pill ${periodoMetricas === "mes" ? "active" : ""}`}
                   onClick={() => setPeriodoMetricas("mes")}
                 >
-                  🗓️ Este Mes (Agosto)
+                  Mensual ({mesActual})
                 </button>
                 <button
                   type="button"
                   className={`fz-time-pill ${periodoMetricas === "ano" ? "active" : ""}`}
                   onClick={() => setPeriodoMetricas("ano")}
                 >
-                  📈 Todo el Año (2026)
+                  Anual (2026)
                 </button>
               </div>
             </div>
 
-            {/* 1. Fila de 4 Tarjetas KPI */}
+            {/* 1. Tarjetas KPI Ejecutivas */}
             <div className="fz-kpi-grid">
-              {/* Tarjeta 1: Destacada con Estilo FutbolZone */}
               <div className="fz-kpi-card fz-kpi-highlight">
                 <div className="fz-kpi-top">
-                  <span className="fz-kpi-label">Ingresos del Período</span>
-                  <span className="fz-kpi-icon-pill">💵</span>
+                  <span className="fz-kpi-label">TOTAL RECAUDADO</span>
+                  <span className="fz-kpi-badge-pill">{subtituloPeriodo}</span>
                 </div>
-                <div className="fz-kpi-value">${totalIngresos.toLocaleString("es-CO")}</div>
-                <div className="fz-kpi-sub">{subtituloPeriodo}</div>
+                <div className="fz-kpi-value">${totalIngresos.toLocaleString("es-CO")} COP</div>
+                <div className="fz-kpi-sub">Ingresos netos por turnos y servicios adicionales</div>
               </div>
 
-              {/* Tarjeta 2: Reservas */}
               <div className="fz-kpi-card">
                 <div className="fz-kpi-top">
-                  <span className="fz-kpi-label">Total Reservas</span>
-                  <span className="fz-kpi-icon-pill fz-icon-orange">📅</span>
+                  <span className="fz-kpi-label">TOTAL RESERVAS</span>
+                  <span className="fz-kpi-badge-neutral">OPERATIVO</span>
                 </div>
                 <div className="fz-kpi-value">{totalReservasCount}</div>
-                <div className="fz-kpi-sub">Turnos calculados para este rango</div>
+                <div className="fz-kpi-sub">Partidos agendados en el rango seleccionado</div>
               </div>
 
-              {/* Tarjeta 3: Canchas Activas */}
               <div className="fz-kpi-card">
                 <div className="fz-kpi-top">
-                  <span className="fz-kpi-label">Canchas Habilitadas</span>
-                  <span className="fz-kpi-icon-pill fz-icon-green">⚽</span>
+                  <span className="fz-kpi-label">CANCHAS HABILITADAS</span>
+                  <span className="fz-kpi-badge-success">100% ACTIVAS</span>
                 </div>
                 <div className="fz-kpi-value">{canchasActivasCount}</div>
-                <div className="fz-kpi-sub">Fútbol 5, Fútbol 7 y Fútbol 11</div>
+                <div className="fz-kpi-sub">Fútbol 5, Fútbol 7 y Fútbol 11 operativas</div>
               </div>
 
-              {/* Tarjeta 4: Calificación / Clientes */}
               <div className="fz-kpi-card">
                 <div className="fz-kpi-top">
-                  <span className="fz-kpi-label">Satisfacción Promedio</span>
-                  <span className="fz-kpi-icon-pill fz-icon-yellow">⭐</span>
+                  <span className="fz-kpi-label">CLIENTES REGISTRADOS</span>
+                  <span className="fz-kpi-badge-neutral">VERIFICADOS</span>
                 </div>
-                <div className="fz-kpi-value">4.9 / 5.0</div>
-                <div className="fz-kpi-sub">{usuarios.length} clientes registrados</div>
+                <div className="fz-kpi-value">{usuarios.length}</div>
+                <div className="fz-kpi-sub">4.9 / 5.0 índice de satisfacción promedio</div>
               </div>
             </div>
 
-            {/* 2. Grid Gráfico Central (Bar Chart + Area Wave + Donut Chart) */}
+            {/* 2. Gráficos Ejecutivos */}
             <div className="fz-charts-grid">
-              {/* Columna Izquierda / Central: Gráficos de Barras y Onda */}
               <div className="fz-charts-left">
-                {/* WIDGET 1: Gráfico de Barras Dobles (Bar Chart) */}
+                {/* Gráfico de Barras */}
                 <div className="fz-widget-card">
                   <div className="fz-widget-header">
                     <div>
                       <h3 className="fz-widget-title">
-                        {periodoMetricas === "semana" && "Actividad Diaria de la Semana (Lun - Dom)"}
-                        {periodoMetricas === "mes" && "Rendimiento Mensual de Reservas (Ene - Sep)"}
-                        {periodoMetricas === "ano" && "Historial y Proyección Anual (2023 - 2026)"}
+                        {periodoMetricas === "semana" && "Actividad Diaria de la Semana"}
+                        {periodoMetricas === "mes" && "Rendimiento Mensual de Reservas"}
+                        {periodoMetricas === "ano" && "Historial y Proyección Anual"}
                       </h3>
-                      <p className="fz-widget-subtitle">Comparativa de horas reservadas vs capacidad total</p>
+                      <p className="fz-widget-subtitle">Comparativa de horas reservadas vs capacidad disponible</p>
                     </div>
                     <div className="fz-chart-legend">
-                      <span className="legend-item"><span className="legend-dot green"></span> Reservadas</span>
-                      <span className="legend-item"><span className="legend-dot gold"></span> Disponibles</span>
+                      <span className="legend-item"><span className="legend-dot green"></span> Horas Reservadas</span>
+                      <span className="legend-item"><span className="legend-dot gold"></span> Capacidad Libre</span>
                       <button type="button" className="fz-btn-sm" onClick={() => setTabActiva("reservas")}>Ver Listado</button>
                     </div>
                   </div>
 
-                  {/* Barras SVG vectoriales estilizadas */}
                   <div className="fz-bar-chart-container">
                     <div className="fz-chart-bars">
                       {datosBarras.map((item, idx) => (
@@ -481,12 +462,12 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                             <div
                               className="fz-bar-fill primary"
                               style={{ height: `${item.v1}%` }}
-                              title={`${item.label}: ${item.v1}% ocupado`}
+                              title={`${item.label}: ${item.v1}% ocupación`}
                             ></div>
                             <div
                               className="fz-bar-fill accent"
                               style={{ height: `${item.v2 * 0.7}%` }}
-                              title={`${item.label}: ${item.v2}% libre`}
+                              title={`${item.label}: ${item.v2}% disponible`}
                             ></div>
                           </div>
                           <span className="fz-bar-label">{item.label}</span>
@@ -496,26 +477,24 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                   </div>
                 </div>
 
-                {/* WIDGET 2: Gráfico de Ondas de Ocupación + Mini Calendario */}
+                {/* Gráfico de Ondas de Ocupación + Calendario */}
                 <div className="fz-widget-card fz-wave-calendar-card">
                   <div className="fz-wave-section">
-                    <h4 className="fz-section-title">Curva de Horarios Pico</h4>
-                    <p className="fz-widget-subtitle">Distribución de demanda: Mañana, Tarde y Noche</p>
+                    <h4 className="fz-section-title">Distribución de Horarios Pico</h4>
+                    <p className="fz-widget-subtitle">Curva de afluencia: Mañana, Tarde y Franja Nocturna</p>
                     
-                    {/* SVG Curva de Onda */}
                     <div className="fz-wave-svg-wrap">
                       <svg viewBox="0 0 500 140" className="fz-wave-svg" preserveAspectRatio="none">
                         <defs>
                           <linearGradient id="waveGreenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
                             <stop offset="100%" stopColor="#059669" stopOpacity="0.0" />
                           </linearGradient>
                           <linearGradient id="waveGoldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
+                            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.35" />
                             <stop offset="100%" stopColor="#d97706" stopOpacity="0.0" />
                           </linearGradient>
                         </defs>
-                        {/* Onda Dorada (Tarde) */}
                         <path
                           d="M0,120 Q60,40 130,80 T260,30 T390,90 T500,60 L500,140 L0,140 Z"
                           fill="url(#waveGoldGrad)"
@@ -524,9 +503,8 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                           d="M0,120 Q60,40 130,80 T260,30 T390,90 T500,60"
                           fill="none"
                           stroke="#f59e0b"
-                          strokeWidth="3"
+                          strokeWidth="2.5"
                         />
-                        {/* Onda Verde (Noche) */}
                         <path
                           d="M0,130 Q70,90 140,40 T280,70 T400,20 T500,45 L500,140 L0,140 Z"
                           fill="url(#waveGreenGrad)"
@@ -535,17 +513,16 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                           d="M0,130 Q70,90 140,40 T280,70 T400,20 T500,45"
                           fill="none"
                           stroke="#10b981"
-                          strokeWidth="3"
+                          strokeWidth="2.5"
                         />
                       </svg>
                     </div>
                   </div>
 
-                  {/* Mini Calendario de Ocupación */}
                   <div className="fz-calendar-section">
                     <div className="fz-calendar-header">
                       <span>{mesActual}</span>
-                      <span className="fz-cal-badge">Activo</span>
+                      <span className="fz-cal-badge">Disponibilidad en Vivo</span>
                     </div>
                     <div className="fz-calendar-grid">
                       {["D", "L", "M", "M", "J", "V", "S"].map((d, i) => (
@@ -570,13 +547,12 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                 </div>
               </div>
 
-              {/* Columna Derecha: Donut Chart Widget */}
+              {/* Columna Derecha: Ocupación Donut */}
               <div className="fz-charts-right">
                 <div className="fz-widget-card fz-donut-widget">
                   <h3 className="fz-widget-title">Ocupación de Canchas</h3>
-                  <p className="fz-widget-subtitle">Capacidad utilizada en tiempo real</p>
+                  <p className="fz-widget-subtitle">Capacidad global utilizada</p>
 
-                  {/* Medidor Circular Donut */}
                   <div className="fz-donut-circle-wrap">
                     <svg viewBox="0 0 160 160" className="fz-donut-svg">
                       <circle
@@ -584,34 +560,24 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                         cy="80"
                         r="60"
                         className="fz-donut-bg"
-                        strokeWidth="16"
+                        strokeWidth="14"
                       />
                       <circle
                         cx="80"
                         cy="80"
                         r="60"
                         className="fz-donut-val green"
-                        strokeWidth="16"
+                        strokeWidth="14"
                         strokeDasharray="377"
                         strokeDashoffset={`${377 - (377 * porcentajeOcupacion) / 100}`}
-                      />
-                      <circle
-                        cx="80"
-                        cy="80"
-                        r="60"
-                        className="fz-donut-val gold"
-                        strokeWidth="16"
-                        strokeDasharray="377"
-                        strokeDashoffset="310"
                       />
                     </svg>
                     <div className="fz-donut-center-text">
                       <span className="fz-donut-percent">{porcentajeOcupacion}%</span>
-                      <span className="fz-donut-sub">Ocupado</span>
+                      <span className="fz-donut-sub">Ocupación</span>
                     </div>
                   </div>
 
-                  {/* Lista de Detalles */}
                   <div className="fz-donut-list">
                     <div className="fz-donut-item">
                       <div className="fz-donut-item-left">
@@ -656,13 +622,13 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           <div className="fz-subview-card">
             {mostrarFormCancha && (
               <form onSubmit={manejarCrearCancha} className="fz-form-inline">
-                <h3>⚽ Agregar Nueva Cancha Sintética</h3>
+                <h3>Registrar Nueva Cancha Sintética</h3>
                 <div className="fz-form-grid">
                   <div className="fz-field">
                     <label>Nombre de la Cancha *</label>
                     <input
                       type="text"
-                      placeholder="Ej: Cancha Los Campeones"
+                      placeholder="Ej. Cancha Los Campeones"
                       value={nuevaCancha.nombre}
                       onChange={(e) => setNuevaCancha({ ...nuevaCancha, nombre: e.target.value })}
                       required
@@ -692,13 +658,23 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                   </div>
 
                   <div className="fz-field">
-                    <label>Capacidad Jugadores</label>
+                    <label>Capacidad de Jugadores</label>
                     <input
                       type="number"
                       value={nuevaCancha.capacidad_jugadores}
                       onChange={(e) => setNuevaCancha({ ...nuevaCancha, capacidad_jugadores: Number(e.target.value) })}
                     />
                   </div>
+                </div>
+
+                <div className="fz-field" style={{ marginTop: "12px" }}>
+                  <label>Dirección / Ubicación Física</label>
+                  <input
+                    type="text"
+                    placeholder="Calle 63 # 28-45, Sede Central"
+                    value={nuevaCancha.direccion}
+                    onChange={(e) => setNuevaCancha({ ...nuevaCancha, direccion: e.target.value })}
+                  />
                 </div>
 
                 <div className="fz-field" style={{ marginTop: "12px" }}>
@@ -712,7 +688,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                 </div>
 
                 <div className="fz-form-actions">
-                  <button type="submit" className="fz-btn-primary">Guardar Cancha</button>
+                  <button type="submit" className="fz-btn-primary">Guardar Registro</button>
                   <button type="button" className="fz-btn-outline" onClick={() => setMostrarFormCancha(false)}>Cancelar</button>
                 </div>
               </form>
@@ -723,35 +699,35 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                 <div key={c.id} className="fz-cancha-card">
                   <div className="fz-cancha-badge">{c.tipo}</div>
                   <h4>{c.nombre}</h4>
+                  <div className="fz-cancha-address">{c.direccion || "Calle 63 # 28-45, Sede Central"}</div>
                   <p className="fz-cancha-desc">{c.descripcion || "Cancha sintética profesional con césped certificado."}</p>
                   
                   <div className="fz-cancha-meta">
                     <div>
                       <span className="fz-meta-label">Precio / Hora:</span>
-                      <strong>${Number(c.precio_hora).toLocaleString("es-CO")}</strong>
+                      <strong>${Number(c.precio_hora).toLocaleString("es-CO")} COP</strong>
                     </div>
                     <div>
                       <span className="fz-meta-label">Capacidad:</span>
-                      <strong>{c.capacidad_jugadores || 10} jugadores</strong>
+                      <strong>{c.capacidad_jugadores || 10} participantes</strong>
                     </div>
                   </div>
 
-                  <div className="fz-cancha-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+                  <div className="fz-cancha-footer">
                     <button
                       type="button"
                       className={`fz-btn-toggle-cancha ${c.activa !== false ? "activa" : "inactiva"}`}
                       onClick={() => toggleEstadoCancha(c)}
-                      title="Haz clic para activar o desactivar la cancha"
                     >
-                      {c.activa !== false ? "🟢 Habilitada (Activa)" : "🔴 En Mantenimiento (Inactiva)"}
+                      {c.activa !== false ? "Habilitada (Activa)" : "En Mantenimiento"}
                     </button>
                     <button
                       type="button"
                       className="fz-btn-danger-sm"
                       onClick={() => eliminarCancha(c.id)}
-                      title="Eliminar registro de cancha"
+                      title="Eliminar registro"
                     >
-                      🗑️
+                      Eliminar
                     </button>
                   </div>
                 </div>
@@ -764,59 +740,53 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
         {tabActiva === "reservas" && (
           <div className="fz-subview-card">
             <div className="fz-table-filters">
-              <span>Filtrar por estado:</span>
-              <button
-                type="button"
-                className={`fz-filter-pill ${filtroEstadoReserva === "todas" ? "active" : ""}`}
-                onClick={() => setFiltroEstadoReserva("todas")}
-              >
-                Todas ({reservas.length})
-              </button>
-              <button
-                type="button"
-                className={`fz-filter-pill ${filtroEstadoReserva === "pendiente" ? "active" : ""}`}
-                onClick={() => setFiltroEstadoReserva("pendiente")}
-              >
-                🟡 Pendientes
-              </button>
-              <button
-                type="button"
-                className={`fz-filter-pill ${filtroEstadoReserva === "confirmada" ? "active" : ""}`}
-                onClick={() => setFiltroEstadoReserva("confirmada")}
-              >
-                🟢 Confirmadas
-              </button>
-              <button
-                type="button"
-                className={`fz-filter-pill ${filtroEstadoReserva === "completada" ? "active" : ""}`}
-                onClick={() => setFiltroEstadoReserva("completada")}
-              >
-                🔵 Completadas
-              </button>
-              <button
-                type="button"
-                className={`fz-filter-pill ${filtroEstadoReserva === "cancelada" ? "active" : ""}`}
-                onClick={() => setFiltroEstadoReserva("cancelada")}
-              >
-                🔴 Canceladas
-              </button>
+              <div className="fz-filters-left">
+                <span className="fz-filter-title">Estado:</span>
+                <button
+                  type="button"
+                  className={`fz-filter-pill ${filtroEstadoReserva === "todas" ? "active" : ""}`}
+                  onClick={() => setFiltroEstadoReserva("todas")}
+                >
+                  Todas ({reservas.length})
+                </button>
+                <button
+                  type="button"
+                  className={`fz-filter-pill ${filtroEstadoReserva === "pendiente" ? "active" : ""}`}
+                  onClick={() => setFiltroEstadoReserva("pendiente")}
+                >
+                  Pendientes
+                </button>
+                <button
+                  type="button"
+                  className={`fz-filter-pill ${filtroEstadoReserva === "confirmada" ? "active" : ""}`}
+                  onClick={() => setFiltroEstadoReserva("confirmada")}
+                >
+                  Confirmadas
+                </button>
+                <button
+                  type="button"
+                  className={`fz-filter-pill ${filtroEstadoReserva === "completada" ? "active" : ""}`}
+                  onClick={() => setFiltroEstadoReserva("completada")}
+                >
+                  Completadas
+                </button>
+                <button
+                  type="button"
+                  className={`fz-filter-pill ${filtroEstadoReserva === "cancelada" ? "active" : ""}`}
+                  onClick={() => setFiltroEstadoReserva("cancelada")}
+                >
+                  Canceladas
+                </button>
+              </div>
 
               <div className="fz-table-export-actions">
                 <button
                   type="button"
                   className="fz-btn-export-excel"
                   onClick={exportarExcelReservas}
-                  title="Descargar listado en archivo Excel (.XLSX)"
+                  title="Descargar informe en archivo Excel (.xlsx)"
                 >
-                  📊 Exportar Excel (.XLSX)
-                </button>
-                <button
-                  type="button"
-                  className="fz-btn-print-report"
-                  onClick={imprimirReporteFinanciero}
-                  title="Generar e imprimir reporte en PDF"
-                >
-                  🖨️ Reporte PDF
+                  Exportar a Excel (.xlsx)
                 </button>
               </div>
             </div>
@@ -829,17 +799,17 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                     <th>Cliente</th>
                     <th>Cancha</th>
                     <th>Fecha & Horario</th>
-                    <th>Total</th>
+                    <th>Total Liquidado</th>
                     <th>Método de Pago</th>
-                    <th>Estado Reserva</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reservasFiltradas.length === 0 ? (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
-                        No hay reservas en este estado.
+                      <td colSpan={8} style={{ textAlign: "center", padding: "35px", color: "#64748b" }}>
+                        No hay reservas registradas en este estado.
                       </td>
                     </tr>
                   ) : (
@@ -850,30 +820,33 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                           <td><strong>#{r.id}</strong></td>
                           <td>
                             <strong>{r.cliente || "Cliente"}</strong>
-                            {r.notas && <div style={{ fontSize: "11px", color: "#64748b", maxWidth: "200px" }}>{r.notas}</div>}
+                            {r.notas && <div className="fz-row-notes">{r.notas}</div>}
                           </td>
                           <td><span className="fz-cancha-tag">{r.cancha_nombre || "Cancha Central"}</span></td>
-                          <td>{r.fecha} <br /><small className="text-muted">{r.hora_inicio.substring(0, 5)} - {r.hora_fin.substring(0, 5)}</small></td>
-                          <td><strong>${(Number(r.precio_total) || 50000).toLocaleString("es-CO")}</strong></td>
+                          <td>
+                            {r.fecha}
+                            <div className="fz-time-sub">{r.hora_inicio.substring(0, 5)} - {r.hora_fin.substring(0, 5)}</div>
+                          </td>
+                          <td><strong>${(Number(r.precio_total) || 50000).toLocaleString("es-CO")} COP</strong></td>
                           <td>
                             <select
                               className="fz-select-sm"
                               value={metodoDetectado}
                               onChange={(e) => cambiarMetodoPago(r.id, e.target.value)}
                             >
-                              <option value="Efectivo">💵 Efectivo</option>
-                              <option value="Nequi">📱 Nequi</option>
-                              <option value="Daviplata">📲 Daviplata</option>
-                              <option value="Tarjeta">💳 Tarjeta Débito/Crédito</option>
+                              <option value="Efectivo">Efectivo en Taquilla</option>
+                              <option value="Nequi">Nequi</option>
+                              <option value="Daviplata">Daviplata</option>
+                              <option value="Tarjeta">Tarjeta Débito/Crédito</option>
                             </select>
                           </td>
                           <td>
                             <span className={`fz-badge-status ${r.estado}`}>
-                              {r.estado === "confirmada" && "🟢 Confirmada"}
-                              {r.estado === "pendiente" && "🟡 Pendiente"}
-                              {r.estado === "completada" && "🔵 Completada"}
-                              {r.estado === "cancelada" && "🔴 Cancelada"}
-                              {!["confirmada", "pendiente", "completada", "cancelada"].includes(r.estado) && r.estado}
+                              {r.estado === "confirmada" && "CONFIRMADA"}
+                              {r.estado === "pendiente" && "PENDIENTE"}
+                              {r.estado === "completada" && "COMPLETADA"}
+                              {r.estado === "cancelada" && "CANCELADA"}
+                              {!["confirmada", "pendiente", "completada", "cancelada"].includes(r.estado) && r.estado?.toUpperCase()}
                             </span>
                           </td>
                           <td>
@@ -883,9 +856,8 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                                   type="button"
                                   className="fz-btn-action-confirm"
                                   onClick={() => cambiarEstadoReserva(r.id, "confirmada")}
-                                  title="Aprobar y Confirmar Reserva"
                                 >
-                                  ✓ Confirmar
+                                  Confirmar
                                 </button>
                               )}
                               {r.estado === "confirmada" && (
@@ -893,9 +865,8 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                                   type="button"
                                   className="fz-btn-action-complete"
                                   onClick={() => cambiarEstadoReserva(r.id, "completada")}
-                                  title="Marcar Partido como Completado"
                                 >
-                                  ⚽ Completar
+                                  Completar
                                 </button>
                               )}
                               {r.estado !== "cancelada" && r.estado !== "completada" && (
@@ -907,9 +878,8 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                                       cambiarEstadoReserva(r.id, "cancelada");
                                     }
                                   }}
-                                  title="Cancelar reserva"
                                 >
-                                  ✕ Cancelar
+                                  Cancelar
                                 </button>
                               )}
                               {r.estado === "cancelada" && (
@@ -917,9 +887,8 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                                   type="button"
                                   className="fz-btn-action-confirm"
                                   onClick={() => cambiarEstadoReserva(r.id, "confirmada")}
-                                  title="Reactivar / Reabrir reserva"
                                 >
-                                  🔄 Reabrir
+                                  Reabrir
                                 </button>
                               )}
                             </div>
@@ -934,7 +903,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           </div>
         )}
 
-        {/* ── VISTA 4: USUARIOS / CLIENTES ── */}
+        {/* ── VISTA 4: DIRECTO DE CLIENTES ── */}
         {tabActiva === "usuarios" && (
           <div className="fz-subview-card">
             <div className="fz-table-responsive">
@@ -946,7 +915,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                     <th>Correo Electrónico</th>
                     <th>Teléfono</th>
                     <th>Total Reservas</th>
-                    <th>Estado</th>
+                    <th>Estado de Cuenta</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -956,10 +925,10 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                       <td><strong>{u.nombre} {u.apellido}</strong></td>
                       <td>{u.email}</td>
                       <td>{u.telefono || "No registrado"}</td>
-                      <td><span className="fz-count-badge">{u.total_reservas || 0} turnos</span></td>
+                      <td><span className="fz-count-badge">{u.total_reservas || 0} partidos</span></td>
                       <td>
                         <span className={`fz-status-pill ${u.activo !== false ? "active" : "inactive"}`}>
-                          {u.activo !== false ? "Activo" : "Inactivo"}
+                          {u.activo !== false ? "ACTIVO" : "INACTIVO"}
                         </span>
                       </td>
                     </tr>
@@ -975,7 +944,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           <div className="fz-subview-card">
             {mostrarFormEmpleado && (
               <form onSubmit={manejarCrearEmpleado} className="fz-form-inline">
-                <h3>👔 Registrar Nuevo Empleado</h3>
+                <h3>Registrar Nuevo Personal de Sede</h3>
                 <div className="fz-form-grid">
                   <div className="fz-field">
                     <label>Nombre *</label>
@@ -996,7 +965,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                     />
                   </div>
                   <div className="fz-field">
-                    <label>Cargo *</label>
+                    <label>Cargo / Función *</label>
                     <input
                       type="text"
                       value={nuevoEmpleado.cargo}
@@ -1005,7 +974,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                     />
                   </div>
                   <div className="fz-field">
-                    <label>Teléfono</label>
+                    <label>Teléfono de Contacto</label>
                     <input
                       type="tel"
                       value={nuevoEmpleado.telefono}
@@ -1014,7 +983,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                   </div>
                 </div>
                 <div className="fz-form-actions">
-                  <button type="submit" className="fz-btn-primary">Guardar Empleado</button>
+                  <button type="submit" className="fz-btn-primary">Guardar Personal</button>
                   <button type="button" className="fz-btn-outline" onClick={() => setMostrarFormEmpleado(false)}>Cancelar</button>
                 </div>
               </form>
@@ -1023,7 +992,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             <div className="fz-canchas-grid-cards">
               {empleados.map((emp) => (
                 <div key={emp.id} className="fz-cancha-card">
-                  <div className="fz-cancha-badge">Staff</div>
+                  <div className="fz-cancha-badge">Staff Operativo</div>
                   <h4>{emp.nombre} {emp.apellido}</h4>
                   <p className="fz-cancha-desc">Cargo: <strong>{emp.cargo}</strong></p>
                   <div className="fz-cancha-meta">
@@ -1038,17 +1007,17 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           </div>
         )}
 
-        {/* ── VISTA 6: ANUNCIOS GLOBALES ── */}
+        {/* ── VISTA 6: COMUNICADOS EN VIVO ── */}
         {tabActiva === "anuncios" && (
           <div className="fz-subview-card">
             <form onSubmit={guardarAnuncioGlobal} className="fz-form-inline">
-              <h3>📢 Publicar Anuncio Global a Clientes</h3>
-              <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "20px" }}>
-                Este mensaje aparecerá en el encabezado de la plataforma para todos los usuarios en vivo.
+              <h3>Publicar Comunicado en Vivo</h3>
+              <p className="fz-form-subtitle">
+                Este mensaje se desplegará en la barra superior de la plataforma para todos los usuarios.
               </p>
 
               <div className="fz-field">
-                <label>Título del Anuncio *</label>
+                <label>Título del Comunicado *</label>
                 <input
                   type="text"
                   value={tituloAnuncio}
@@ -1074,18 +1043,18 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                     checked={anuncioActivo}
                     onChange={(e) => setAnuncioActivo(e.target.checked)}
                   />{" "}
-                  Activar y mostrar inmediatamente en la plataforma
+                  Mostrar de inmediato en el banner de la plataforma
                 </label>
               </div>
 
               {mensajeAnuncioConfirm && (
                 <div className="fz-alert-success" style={{ marginTop: "15px" }}>
-                  ✅ {mensajeAnuncioConfirm}
+                  {mensajeAnuncioConfirm}
                 </div>
               )}
 
               <div className="fz-form-actions">
-                <button type="submit" className="fz-btn-primary">Publicar Anuncio</button>
+                <button type="submit" className="fz-btn-primary">Publicar Comunicado</button>
               </div>
             </form>
           </div>

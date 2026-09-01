@@ -13,17 +13,6 @@ interface DashboardClienteProps {
   onGoToBooking: () => void;
 }
 
-const AVATAR_PRESETS = [
-  { id: "p1", emoji: "🏃", label: "Delantero" },
-  { id: "p2", emoji: "⚽", label: "Balón Pro" },
-  { id: "p3", emoji: "🧤", label: "Arquero" },
-  { id: "p4", emoji: "👑", label: "Capitán" },
-  { id: "p5", emoji: "⚡", label: "Estrella" },
-  { id: "p6", emoji: "🏆", label: "Campeón" },
-  { id: "p7", emoji: "🦁", label: "Fiera" },
-  { id: "p8", emoji: "🔥", label: "Crack" },
-];
-
 function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardClienteProps) {
   const [tabActiva, setTabActiva] = useState<"resumen" | "reservas" | "torneos" | "retos" | "perfil">("resumen");
   const [misReservas, setMisReservas] = useState<any[]>([]);
@@ -90,7 +79,7 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
         "Total COP": Number(r.precio_total) || 50000,
         "Método de Pago": metodo,
         "Estado": r.estado?.toUpperCase(),
-        "Notas": r.notas || "Reserva estándar",
+        "Detalles": r.notas || "Reserva estándar",
       };
     });
 
@@ -108,7 +97,7 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Mis Reservas");
     const fechaHoy = new Date().toISOString().split("T")[0];
-    XLSX.writeFile(workbook, `Mis_Reservas_${usuario?.nombre || "Jugador"}_${fechaHoy}.xlsx`);
+    XLSX.writeFile(workbook, `Historial_Reservas_${usuario?.nombre || "Cliente"}_${fechaHoy}.xlsx`);
   };
 
   const handleSubirFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,17 +114,10 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
       const base64 = reader.result as string;
       setAvatarUrl(base64);
       localStorage.setItem(`fz_avatar_${usuario?.id}`, base64);
-      setMensajePerfil({ texto: "¡Foto de perfil actualizada con éxito!", tipo: "exito" });
+      setMensajePerfil({ texto: "Foto de perfil actualizada correctamente.", tipo: "exito" });
       setTimeout(() => setMensajePerfil(null), 3000);
     };
     reader.readAsDataURL(file);
-  };
-
-  const seleccionarPresetAvatar = (emoji: string) => {
-    setAvatarUrl(emoji);
-    localStorage.setItem(`fz_avatar_${usuario?.id}`, emoji);
-    setMensajePerfil({ texto: "¡Avatar actualizado!", tipo: "exito" });
-    setTimeout(() => setMensajePerfil(null), 3000);
   };
 
   const eliminarFoto = () => {
@@ -155,7 +137,7 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
       if (res.success) {
         const usuarioActualizado = { ...usuario, nombre, apellido, telefono };
         setStoredUser(usuarioActualizado);
-        setMensajePerfil({ texto: "¡Perfil actualizado con éxito!", tipo: "exito" });
+        setMensajePerfil({ texto: "Perfil actualizado con éxito.", tipo: "exito" });
         setTimeout(() => setMensajePerfil(null), 3000);
       } else {
         setMensajePerfil({ texto: res.message || "Error al actualizar perfil", tipo: "error" });
@@ -167,80 +149,43 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
     }
   };
 
-  const [periodoCliente, setPeriodoCliente] = useState<"semana" | "mes" | "ano">("mes");
-
-  // ── CÁLCULO ESTRICTO Y REAL DE MÉTRICAS DESDE CERO ──
+  // Cálculos de métricas reales
   const reservasValidas = misReservas.filter((r) => r.estado === "confirmada" || r.estado === "completada");
   const totalInvertidoReal = reservasValidas.reduce((sum, r) => sum + (Number(r.precio_total) || 0), 0);
   const partidosJugadosReal = misReservas.filter((r) => r.estado === "completada").length;
   const reservasActivas = misReservas.filter((r) => r.estado === "confirmada" || r.estado === "pendiente");
 
-  // Rango / Nivel dinámico según partidos reales
-  let rangoJugador = "Debutante";
-  let rolBadge = "JUGADOR DEBUTANTE";
+  let rolBadge = "JUGADOR TITULAR";
   if (partidosJugadosReal >= 10) {
-    rangoJugador = "Jugador VIP";
     rolBadge = "JUGADOR VIP";
   } else if (partidosJugadosReal >= 4) {
-    rangoJugador = "Capitán";
     rolBadge = "CAPITÁN";
-  } else if (partidosJugadosReal >= 1) {
-    rangoJugador = "Titular";
-    rolBadge = "JUGADOR TITULAR";
+  } else if (partidosJugadosReal === 0) {
+    rolBadge = "JUGADOR DEBUTANTE";
   }
 
-  // Filtrado temporal
-  let totalInvertido = totalInvertidoReal;
-  const partidosJugados = partidosJugadosReal;
-  let subInversion = totalInvertidoReal === 0 ? "Sin gastos registrados aún" : "Total invertido en canchas";
+  const iniciales = `${usuario?.nombre?.charAt(0) || "U"}${usuario?.apellido?.charAt(0) || ""}`.toUpperCase();
 
-  if (totalInvertidoReal > 0) {
-    if (periodoCliente === "semana") {
-      totalInvertido = Math.round(totalInvertidoReal * 0.4);
-      subInversion = "Inversión en la semana actual";
-    } else if (periodoCliente === "ano") {
-      subInversion = "Inversión acumulada anual (2026)";
-    }
-  }
-
-  // Datos del gráfico de barras basados en datos reales
-  const mesesEtiquetas = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP"];
-  const datosBarrasCliente = mesesEtiquetas.map((mes, idx) => {
-    if (totalInvertidoReal === 0) {
-      return { label: mes, v1: 0, v2: 0 };
-    }
-    // Si tiene reservas, distribuir proporcionalmente
-    const esMesActual = idx === 7; // Agosto
-    return {
-      label: mes,
-      v1: esMesActual ? Math.min(100, partidosJugadosReal * 25 || 40) : 0,
-      v2: esMesActual ? 20 : 0,
-    };
-  });
+  // Próxima reserva activa
+  const proximaReserva = reservasActivas[0];
 
   return (
     <div className="fz-client-layout">
-      {/* ── SIDEBAR DEL CLIENTE ── */}
+      {/* ── SIDEBAR CORPORATIVO DEL CLIENTE ── */}
       <aside className="fz-client-sidebar">
         <div className="fz-client-user-box">
           <div
             className="fz-client-avatar-halo"
-            onClick={() => {
-              setTabActiva("perfil");
-            }}
-            title="Haz clic para cambiar tu foto de perfil"
-            style={{ cursor: "pointer" }}
+            onClick={() => setTabActiva("perfil")}
+            title="Haz clic para actualizar tu información"
           >
             <div className="fz-client-avatar-inner">
               {avatarUrl && avatarUrl.startsWith("data:image") ? (
                 <img src={avatarUrl} alt="Avatar" className="fz-avatar-img-custom" />
-              ) : avatarUrl ? (
-                <span className="fz-avatar-emoji">{avatarUrl}</span>
               ) : (
-                <span>🏃</span>
+                <span className="fz-avatar-initials-txt">{iniciales}</span>
               )}
             </div>
-            <span className="fz-avatar-edit-badge" title="Cambiar foto">📷</span>
           </div>
 
           <h3 className="fz-client-name">
@@ -256,8 +201,7 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
             className={`fz-client-nav-btn ${tabActiva === "resumen" ? "active" : ""}`}
             onClick={() => setTabActiva("resumen")}
           >
-            <span className="fz-nav-ico">📊</span>
-            <span>Mi Rendimiento</span>
+            <span>Resumen General</span>
           </button>
 
           <button
@@ -265,7 +209,6 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
             className={`fz-client-nav-btn ${tabActiva === "reservas" ? "active" : ""}`}
             onClick={() => setTabActiva("reservas")}
           >
-            <span className="fz-nav-ico">📅</span>
             <span>Mis Reservas ({misReservas.length})</span>
           </button>
 
@@ -274,8 +217,7 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
             className={`fz-client-nav-btn ${tabActiva === "torneos" ? "active" : ""}`}
             onClick={() => setTabActiva("torneos")}
           >
-            <span className="fz-nav-ico">🏆</span>
-            <span>Torneos & Fixture</span>
+            <span>Torneos y Ligas</span>
           </button>
 
           <button
@@ -283,7 +225,6 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
             className={`fz-client-nav-btn ${tabActiva === "retos" ? "active" : ""}`}
             onClick={() => setTabActiva("retos")}
           >
-            <span className="fz-nav-ico">📢</span>
             <span>Tablón de Retos</span>
           </button>
 
@@ -292,283 +233,210 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
             className={`fz-client-nav-btn ${tabActiva === "perfil" ? "active" : ""}`}
             onClick={() => setTabActiva("perfil")}
           >
-            <span className="fz-nav-ico">👤</span>
-            <span>Editar Mi Perfil</span>
+            <span>Mi Perfil y Seguridad</span>
           </button>
         </nav>
 
-        <div className="fz-client-sidebar-bottom">
-          <button type="button" className="fz-btn-book-sidebar" onClick={onGoToBooking}>
-            ⚡ Reservar Cancha
+        <div className="fz-client-sidebar-footer">
+          <button type="button" className="fz-btn-book-cta" onClick={onGoToBooking}>
+            + Reservar Cancha
           </button>
-          <button type="button" className="fz-btn-client-logout" onClick={onLogout}>
-            <span>🚪</span> Cerrar Sesión
+          <button type="button" className="fz-client-logout-btn" onClick={onLogout}>
+            Cerrar Sesión
           </button>
         </div>
       </aside>
 
-      {/* ── ÁREA DE CONTENIDO PRINCIPAL ── */}
+      {/* ── CONTENIDO PRINCIPAL ── */}
       <main className="fz-client-main">
-        <header className="fz-client-header">
+        {/* Encabezado Superior */}
+        <header className="fz-client-top-bar">
           <div>
-            <div className="fz-breadcrumb">Portal del Jugador › FutbolZone ADSO III</div>
-            <h1 className="fz-main-title">
-              {tabActiva === "resumen" && `¡Hola de nuevo, ${usuario?.nombre || "Crack"}! ⚽`}
-              {tabActiva === "reservas" && "Historial y Estado de Mis Reservas"}
-              {tabActiva === "torneos" && "Campeonatos, Tabla de Posiciones & Fixture"}
-              {tabActiva === "retos" && "Comunidad: Búsqueda de Jugadores & Retos"}
-              {tabActiva === "perfil" && "Configuración de Mi Cuenta"}
+            <div className="fz-client-breadcrumb">Panel de Usuario › FutbolZone ADSO III</div>
+            <h1 className="fz-client-view-title">
+              {tabActiva === "resumen" && `Bienvenido, ${usuario?.nombre || "Jugador"}`}
+              {tabActiva === "reservas" && "Historial y Gestión de Reservas"}
+              {tabActiva === "torneos" && "Torneos y Competencias Oficiales"}
+              {tabActiva === "retos" && "Comunidad y Tablón de Retos"}
+              {tabActiva === "perfil" && "Configuración de Perfil y Cuenta"}
             </h1>
-            {cargando && <div style={{ fontSize: "12px", color: "#10b981", fontWeight: 700, marginTop: "4px" }}>● Sincronizando reservas...</div>}
+            {cargando && <div className="fz-sync-status">Sincronizando información...</div>}
           </div>
 
-          <div className="fz-client-header-actions">
+          <div className="fz-client-top-actions">
             <button type="button" className="fz-btn-primary" onClick={onGoToBooking}>
               + Nueva Reserva
+            </button>
+            <button type="button" className="fz-btn-refresh" onClick={cargarReservas}>
+              Actualizar
             </button>
           </div>
         </header>
 
         {mensaje && (
-          <div className="fz-client-alert success">
-            ✅ {mensaje}
+          <div className="fz-client-banner-alert">
+            <span>{mensaje}</span>
           </div>
         )}
 
-        {/* ── VISTA 1: RESUMEN / MÉTRICAS DEL CLIENTE ── */}
+        {/* ── TAB 1: RESUMEN GENERAL ── */}
         {tabActiva === "resumen" && (
-          <div className="fz-dashboard-view">
-            {/* Selector de Período Temporal Cliente */}
-            <div className="fz-time-filter-container">
-              <span className="fz-time-label">⏱️ Período de Cálculo:</span>
-              <div className="fz-time-pills">
-                <button
-                  type="button"
-                  className={`fz-time-pill ${periodoCliente === "semana" ? "active" : ""}`}
-                  onClick={() => setPeriodoCliente("semana")}
-                >
-                  📅 Esta Semana
-                </button>
-                <button
-                  type="button"
-                  className={`fz-time-pill ${periodoCliente === "mes" ? "active" : ""}`}
-                  onClick={() => setPeriodoCliente("mes")}
-                >
-                  🗓️ Este Mes
-                </button>
-                <button
-                  type="button"
-                  className={`fz-time-pill ${periodoCliente === "ano" ? "active" : ""}`}
-                  onClick={() => setPeriodoCliente("ano")}
-                >
-                  📈 Año 2026
-                </button>
-              </div>
-            </div>
-
-            {/* Fila de 4 KPIs Reales */}
+          <div className="fz-client-tab-content">
+            {/* 4 KPIs Ejecutivos */}
             <div className="fz-kpi-grid">
               <div className="fz-kpi-card fz-kpi-highlight">
                 <div className="fz-kpi-top">
-                  <span className="fz-kpi-label">Inversión en Partidos</span>
-                  <span className="fz-kpi-icon-pill">💵</span>
+                  <span className="fz-kpi-label">TOTAL INVERTIDO</span>
+                  <span className="fz-kpi-badge-pill">REGISTRO AL DÍA</span>
                 </div>
-                <div className="fz-kpi-value">${totalInvertido.toLocaleString("es-CO")} COP</div>
-                <div className="fz-kpi-sub">{subInversion}</div>
+                <div className="fz-kpi-value">${totalInvertidoReal.toLocaleString("es-CO")} COP</div>
+                <div className="fz-kpi-sub">Gasto acumulado en turnos y servicios</div>
               </div>
 
               <div className="fz-kpi-card">
                 <div className="fz-kpi-top">
-                  <span className="fz-kpi-label">Reservas Activas</span>
-                  <span className="fz-kpi-icon-pill fz-icon-green">📅</span>
+                  <span className="fz-kpi-label">PARTIDOS JUGADOS</span>
+                  <span className="fz-kpi-badge-neutral">{rolBadge}</span>
+                </div>
+                <div className="fz-kpi-value">{partidosJugadosReal}</div>
+                <div className="fz-kpi-sub">Encuentros completados exitosamente</div>
+              </div>
+
+              <div className="fz-kpi-card">
+                <div className="fz-kpi-top">
+                  <span className="fz-kpi-label">RESERVAS ACTIVAS</span>
+                  <span className="fz-kpi-badge-success">{reservasActivas.length} VIGENTES</span>
                 </div>
                 <div className="fz-kpi-value">{reservasActivas.length}</div>
-                <div className="fz-kpi-sub">
-                  {reservasActivas.length === 0 ? "Sin turnos pendientes" : "Próximos partidos agendados"}
-                </div>
+                <div className="fz-kpi-sub">Turnos agendados próximos a disputar</div>
               </div>
 
               <div className="fz-kpi-card">
                 <div className="fz-kpi-top">
-                  <span className="fz-kpi-label">Partidos Jugados</span>
-                  <span className="fz-kpi-icon-pill fz-icon-orange">⚽</span>
+                  <span className="fz-kpi-label">PUNTOS DE FIDELIDAD</span>
+                  <span className="fz-kpi-badge-neutral">CLUB ZONE</span>
                 </div>
-                <div className="fz-kpi-value">{partidosJugados}</div>
-                <div className="fz-kpi-sub">
-                  {partidosJugados === 0 ? "Aún no has jugado partidos" : "Historial completado"}
-                </div>
-              </div>
-
-              <div className="fz-kpi-card">
-                <div className="fz-kpi-top">
-                  <span className="fz-kpi-label">Nivel de Jugador</span>
-                  <span className="fz-kpi-icon-pill fz-icon-yellow">⭐</span>
-                </div>
-                <div className="fz-kpi-value">{rangoJugador}</div>
-                <div className="fz-kpi-sub">
-                  {partidosJugadosReal === 0 ? "Juega para subir de nivel" : "Puntualidad 100%"}
-                </div>
+                <div className="fz-kpi-value">{partidosJugadosReal * 150} pts</div>
+                <div className="fz-kpi-sub">Canjeables por kits y descuentos</div>
               </div>
             </div>
 
-            {/* Grid Gráfico */}
-            <div className="fz-charts-grid">
-              <div className="fz-charts-left">
-                {/* WIDGET 1: Gráfico de Actividad */}
-                <div className="fz-widget-card">
-                  <div className="fz-widget-header">
-                    <div>
-                      <h3 className="fz-widget-title">Tu Actividad en Canchas (2026)</h3>
-                      <p className="fz-widget-subtitle">
-                        {totalInvertidoReal === 0
-                          ? "Comienza reservando tu primera cancha para ver tus estadísticas"
-                          : "Horas jugadas registradas en FutbolZone"}
-                      </p>
-                    </div>
-                    <div className="fz-chart-legend">
-                      <span className="legend-item"><span className="legend-dot green"></span> Horas Jugadas</span>
-                      <span className="legend-item"><span className="legend-dot gold"></span> Amistosos</span>
-                    </div>
-                  </div>
+            {/* Próximo Partido Destacado */}
+            <div className="fz-client-highlight-banner">
+              <div className="fz-highlight-info">
+                <span className="fz-highlight-tag">PRÓXIMO PARTIDO AGENDADO</span>
+                {proximaReserva ? (
+                  <>
+                    <h3>{proximaReserva.cancha_nombre || "Cancha Central"}</h3>
+                    <p>
+                      Fecha: <strong>{proximaReserva.fecha}</strong> | Horario:{" "}
+                      <strong>
+                        {proximaReserva.hora_inicio?.substring(0, 5)} - {proximaReserva.hora_fin?.substring(0, 5)}
+                      </strong>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3>No tienes ningún partido agendado próximamente</h3>
+                    <p>Elige tu cancha favorita y reserva tu turno en segundos sin esperas ni llamadas.</p>
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                className="fz-btn-primary"
+                onClick={proximaReserva ? () => setReservaParaTicket(proximaReserva) : onGoToBooking}
+              >
+                {proximaReserva ? "Ver Comprobante Oficial" : "Reservar Ahora"}
+              </button>
+            </div>
 
-                  <div className="fz-bar-chart-container">
-                    <div className="fz-chart-bars">
-                      {datosBarrasCliente.map((item, idx) => (
-                        <div key={idx} className="fz-bar-group">
-                          <div className="fz-bars-pair">
-                            <div
-                              className="fz-bar-fill primary"
-                              style={{ height: `${item.v1}%` }}
-                              title={`${item.label}: ${item.v1}%`}
-                            ></div>
-                            <div
-                              className="fz-bar-fill accent"
-                              style={{ height: `${item.v2}%` }}
-                              title={`${item.label}: ${item.v2}%`}
-                            ></div>
-                          </div>
-                          <span className="fz-bar-label">{item.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            {/* Tabla de Reservas Recientes */}
+            <div className="fz-subview-card" style={{ marginTop: "24px" }}>
+              <div className="fz-table-filters">
+                <div className="fz-filters-left">
+                  <span className="fz-filter-title">Últimas Reservas Realizadas</span>
                 </div>
-
-                {/* WIDGET 2: Tarjeta de Próximo Partido */}
-                <div className="fz-widget-card fz-next-match-widget">
-                  <h3 className="fz-widget-title">Tu Próximo Encuentro</h3>
-                  {reservasActivas.length === 0 ? (
-                    <div className="fz-no-match-box">
-                      <span style={{ fontSize: "36px", display: "block", marginBottom: "8px" }}>⚽</span>
-                      <h4>No tienes partidos programados</h4>
-                      <p>¡Reúne a tus amigos y reserva una cancha sintética con luces LED en minutos!</p>
-                      <button
-                        type="button"
-                        className="fz-btn-primary"
-                        style={{ marginTop: "12px" }}
-                        onClick={onGoToBooking}
-                      >
-                        ⚡ Agendar Mi Primer Partido
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="fz-next-match-card">
-                      <div className="fz-match-date">
-                        <span className="day">{reservasActivas[0]?.fecha?.split("-")[2] || "28"}</span>
-                        <span className="month">FECHA</span>
-                      </div>
-                      <div className="fz-match-info">
-                        <h4>{reservasActivas[0]?.cancha_nombre || "Cancha Sintética"}</h4>
-                        <p>
-                          Horario: <strong>{reservasActivas[0]?.hora_inicio.substring(0, 5)} - {reservasActivas[0]?.hora_fin.substring(0, 5)}</strong>
-                        </p>
-                        <span className={`fz-badge-status ${reservasActivas[0]?.estado}`}>
-                          {reservasActivas[0]?.estado === "confirmada" && "🟢 Confirmada"}
-                          {reservasActivas[0]?.estado === "pendiente" && "🟡 Pendiente"}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        className="fz-btn-ticket-match"
-                        onClick={() => setReservaParaTicket(reservasActivas[0])}
-                      >
-                        📄 Ver Ticket
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  className="fz-btn-export-excel"
+                  onClick={() => setTabActiva("reservas")}
+                >
+                  Ver Todas las Reservas ({misReservas.length})
+                </button>
               </div>
 
-              {/* Columna Derecha: Canchas Favoritas Donut */}
-              <div className="fz-charts-right">
-                <div className="fz-widget-card fz-donut-widget">
-                  <h3 className="fz-widget-title">Tus Canchas Preferidas</h3>
-                  <p className="fz-widget-subtitle">
-                    {totalInvertidoReal === 0 ? "Sin partidos jugados todavía" : "Distribución de tus reservas"}
-                  </p>
-
-                  <div className="fz-donut-circle-wrap">
-                    <svg viewBox="0 0 160 160" className="fz-donut-svg">
-                      <circle cx="80" cy="80" r="60" className="fz-donut-bg" strokeWidth="16" />
-                      {totalInvertidoReal > 0 && (
-                        <circle
-                          cx="80"
-                          cy="80"
-                          r="60"
-                          className="fz-donut-val green"
-                          strokeWidth="16"
-                          strokeDasharray="377"
-                          strokeDashoffset="120"
-                        />
-                      )}
-                    </svg>
-                    <div className="fz-donut-center-text">
-                      <span className="fz-donut-percent">{totalInvertidoReal > 0 ? "100%" : "0%"}</span>
-                      <span className="fz-donut-sub">{totalInvertidoReal > 0 ? "Activo" : "Sin Partidos"}</span>
-                    </div>
-                  </div>
-
-                  <div className="fz-donut-list">
-                    <div className="fz-donut-item">
-                      <div className="fz-donut-item-left">
-                        <span className="fz-dot green"></span>
-                        <span>Fútbol 5 (Cancha Central)</span>
-                      </div>
-                      <strong>{totalInvertidoReal > 0 ? "100%" : "0%"}</strong>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="fz-btn-block-action"
-                    onClick={onGoToBooking}
-                  >
-                    Agendar Nuevo Partido
-                  </button>
-                </div>
+              <div className="fz-table-responsive">
+                <table className="fz-data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Cancha</th>
+                      <th>Fecha & Horario</th>
+                      <th>Total</th>
+                      <th>Estado</th>
+                      <th>Comprobante</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {misReservas.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
+                          Aún no has registrado ninguna reserva.
+                        </td>
+                      </tr>
+                    ) : (
+                      misReservas.slice(0, 5).map((r) => (
+                        <tr key={r.id}>
+                          <td><strong>#{r.id}</strong></td>
+                          <td><span className="fz-cancha-tag">{r.cancha_nombre || "Cancha Central"}</span></td>
+                          <td>
+                            {r.fecha}
+                            <div className="fz-time-sub">{r.hora_inicio?.substring(0, 5)} - {r.hora_fin?.substring(0, 5)}</div>
+                          </td>
+                          <td><strong>${(Number(r.precio_total) || 50000).toLocaleString("es-CO")} COP</strong></td>
+                          <td>
+                            <span className={`fz-badge-status ${r.estado}`}>
+                              {r.estado === "confirmada" && "CONFIRMADA"}
+                              {r.estado === "pendiente" && "PENDIENTE"}
+                              {r.estado === "completada" && "COMPLETADA"}
+                              {r.estado === "cancelada" && "CANCELADA"}
+                              {!["confirmada", "pendiente", "completada", "cancelada"].includes(r.estado) && r.estado?.toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="fz-btn-action-complete"
+                              onClick={() => setReservaParaTicket(r)}
+                            >
+                              Ver Comprobante
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── VISTA 2: MIS RESERVAS ── */}
+        {/* ── TAB 2: TODAS MIS RESERVAS ── */}
         {tabActiva === "reservas" && (
           <div className="fz-subview-card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: "18px", color: "#0f172a" }}>Historial de Partidos ({misReservas.length})</h3>
-                <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#64748b" }}>Turnos agendados y comprobantes oficiales</p>
+            <div className="fz-table-filters">
+              <div className="fz-filters-left">
+                <span className="fz-filter-title">Listado Completo de Reservas</span>
               </div>
-              {misReservas.length > 0 && (
-                <button
-                  type="button"
-                  className="fz-btn-export-excel"
-                  onClick={exportarExcelMisReservas}
-                  title="Descargar mi historial en formato Excel .XLSX"
-                >
-                  📊 Descargar Historial en Excel (.XLSX)
-                </button>
-              )}
+              <button
+                type="button"
+                className="fz-btn-export-excel"
+                onClick={exportarExcelMisReservas}
+              >
+                Descargar Historial (.xlsx)
+              </button>
             </div>
 
             <div className="fz-table-responsive">
@@ -587,53 +455,51 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
                 <tbody>
                   {misReservas.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
-                        <span style={{ fontSize: "36px", display: "block", marginBottom: "8px" }}>📭</span>
-                        <strong>Aún no tienes reservas registradas.</strong>
-                        <p style={{ margin: "6px 0 16px", fontSize: "13px" }}>Tus partidos agendados aparecerán aquí con su ticket y estado en tiempo real.</p>
-                        <button type="button" className="fz-btn-primary" onClick={onGoToBooking}>
-                          ⚡ Reservar Mi Primera Cancha
-                        </button>
+                      <td colSpan={7} style={{ textAlign: "center", padding: "35px", color: "#64748b" }}>
+                        No tienes reservas registradas en tu cuenta.
                       </td>
                     </tr>
                   ) : (
                     misReservas.map((r) => {
-                      const metodoDetectado = r.metodo_pago || (r.notas?.includes("NEQUI") ? "📱 Nequi" : r.notas?.includes("DAVIPLATA") ? "📲 Daviplata" : r.notas?.includes("TARJETA") ? "💳 Tarjeta" : "💵 Efectivo");
+                      const metodo = r.metodo_pago || (r.notas?.includes("NEQUI") ? "Nequi" : r.notas?.includes("DAVIPLATA") ? "Daviplata" : r.notas?.includes("TARJETA") ? "Tarjeta" : "Efectivo");
                       return (
                         <tr key={r.id}>
                           <td><strong>#{r.id}</strong></td>
-                          <td><span className="fz-cancha-tag">{r.cancha_nombre || "Cancha Sintética"}</span></td>
-                          <td>{r.fecha} <br /><small className="text-muted">{r.hora_inicio.substring(0, 5)} - {r.hora_fin.substring(0, 5)}</small></td>
-                          <td><strong>${(Number(r.precio_total) || 50000).toLocaleString("es-CO")}</strong></td>
-                          <td><span className="fz-pay-method-badge">{metodoDetectado}</span></td>
+                          <td>
+                            <span className="fz-cancha-tag">{r.cancha_nombre || "Cancha Sintética"}</span>
+                            {r.notas && <div className="fz-row-notes">{r.notas}</div>}
+                          </td>
+                          <td>
+                            {r.fecha}
+                            <div className="fz-time-sub">{r.hora_inicio?.substring(0, 5)} - {r.hora_fin?.substring(0, 5)}</div>
+                          </td>
+                          <td><strong>${(Number(r.precio_total) || 50000).toLocaleString("es-CO")} COP</strong></td>
+                          <td>{metodo}</td>
                           <td>
                             <span className={`fz-badge-status ${r.estado}`}>
-                              {r.estado === "confirmada" && "🟢 Confirmada"}
-                              {r.estado === "pendiente" && "🟡 Pendiente"}
-                              {r.estado === "completada" && "🔵 Completada"}
-                              {r.estado === "cancelada" && "🔴 Cancelada"}
-                              {!["confirmada", "pendiente", "completada", "cancelada"].includes(r.estado) && r.estado}
+                              {r.estado === "confirmada" && "CONFIRMADA"}
+                              {r.estado === "pendiente" && "PENDIENTE"}
+                              {r.estado === "completada" && "COMPLETADA"}
+                              {r.estado === "cancelada" && "CANCELADA"}
+                              {!["confirmada", "pendiente", "completada", "cancelada"].includes(r.estado) && r.estado?.toUpperCase()}
                             </span>
                           </td>
                           <td>
                             <div className="fz-action-btns">
                               <button
                                 type="button"
-                                className="fz-btn-sm"
-                                style={{ background: "#059669" }}
+                                className="fz-btn-action-complete"
                                 onClick={() => setReservaParaTicket(r)}
-                                title="Descargar Comprobante / Ticket"
                               >
-                                📄 Ticket
+                                Comprobante
                               </button>
                               {r.estado !== "cancelada" && r.estado !== "completada" && (
                                 <button
                                   type="button"
-                                  className="fz-btn-danger-sm"
+                                  className="fz-btn-action-cancel"
                                   onClick={() => cancelarReserva(r.id)}
-                                  title="Cancelar Reserva"
                                 >
-                                  ✕ Cancelar
+                                  Cancelar
                                 </button>
                               )}
                             </div>
@@ -648,86 +514,20 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
           </div>
         )}
 
-        {/* ── VISTA 3: TORNEOS, TABLA DE POSICIONES & FIXTURE ── */}
-        {tabActiva === "torneos" && (
-          <TorneosView />
-        )}
+        {/* ── TAB 3: TORNEOS ── */}
+        {tabActiva === "torneos" && <TorneosView />}
 
-        {/* ── VISTA 4: TABLÓN DE RETOS / BUSCADOR DE JUGADORES ── */}
-        {tabActiva === "retos" && (
-          <TablonRetos />
-        )}
+        {/* ── TAB 4: TABLÓN DE RETOS ── */}
+        {tabActiva === "retos" && <TablonRetos usuario={usuario} />}
 
-        {/* ── VISTA 5: PERFIL & FOTO ── */}
+        {/* ── TAB 5: MI PERFIL Y SEGURIDAD ── */}
         {tabActiva === "perfil" && (
-          <div className="fz-subview-card" style={{ maxWidth: "750px" }}>
-            <h3>👤 Mi Perfil & Foto de Jugador</h3>
-            <p style={{ color: "#64748b", marginBottom: "20px" }}>Personaliza tu foto de avatar y mantén tus datos actualizados.</p>
+          <div className="fz-subview-card">
+            <h3>Información del Titular</h3>
+            <p className="fz-form-subtitle">Actualiza tus datos de contacto y credenciales de acceso.</p>
 
-            {/* SECCIÓN DE FOTO / AVATAR */}
-            <div className="fz-avatar-manager-box">
-              <div className="fz-avatar-preview-wrap">
-                <div className="fz-avatar-big-circle">
-                  {avatarUrl && avatarUrl.startsWith("data:image") ? (
-                    <img src={avatarUrl} alt="Foto de perfil" className="fz-avatar-big-img" />
-                  ) : avatarUrl ? (
-                    <span className="fz-avatar-big-emoji">{avatarUrl}</span>
-                  ) : (
-                    <span className="fz-avatar-big-emoji">🏃</span>
-                  )}
-                </div>
-                <div className="fz-avatar-actions-btns">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    onChange={handleSubirFoto}
-                  />
-                  <button
-                    type="button"
-                    className="fz-btn-upload-photo"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    📁 Subir Foto de Mi Dispositivo
-                  </button>
-                  {avatarUrl && (
-                    <button
-                      type="button"
-                      className="fz-btn-remove-photo"
-                      onClick={eliminarFoto}
-                    >
-                      🗑️ Quitar Foto
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Selector de Presets de Avatares */}
-              <div className="fz-avatar-presets-container">
-                <span className="fz-presets-label">O elige un avatar de jugador rápido:</span>
-                <div className="fz-presets-grid">
-                  {AVATAR_PRESETS.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={`fz-preset-btn ${avatarUrl === p.emoji ? "active" : ""}`}
-                      onClick={() => seleccionarPresetAvatar(p.emoji)}
-                      title={p.label}
-                    >
-                      <span className="fz-preset-emoji">{p.emoji}</span>
-                      <span className="fz-preset-text">{p.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="fz-divider-soft"></div>
-
-            {/* Formulario de Datos Personales */}
             <form onSubmit={guardarPerfil} className="fz-form-inline">
-              <div className="fz-form-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+              <div className="fz-form-grid">
                 <div className="fz-field">
                   <label>Nombre *</label>
                   <input
@@ -737,6 +537,7 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
                     required
                   />
                 </div>
+
                 <div className="fz-field">
                   <label>Apellido *</label>
                   <input
@@ -746,15 +547,19 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
                     required
                   />
                 </div>
-              </div>
 
-              <div className="fz-form-grid" style={{ gridTemplateColumns: "1fr 1fr", marginTop: "15px" }}>
                 <div className="fz-field">
-                  <label>Correo Electrónico (No editable)</label>
-                  <input type="email" value={usuario?.email || ""} disabled style={{ background: "#e2e8f0" }} />
+                  <label>Correo Electrónico (No modificable)</label>
+                  <input
+                    type="email"
+                    value={usuario?.email || ""}
+                    disabled
+                    style={{ background: "#e2e8f0", cursor: "not-allowed" }}
+                  />
                 </div>
+
                 <div className="fz-field">
-                  <label>Teléfono de Contacto</label>
+                  <label>Teléfono / WhatsApp</label>
                   <input
                     type="tel"
                     value={telefono}
@@ -765,30 +570,55 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
               </div>
 
               {mensajePerfil && (
-                <div className={`fz-alert-${mensajePerfil.tipo}`} style={{ marginTop: "15px" }}>
-                  {mensajePerfil.tipo === "exito" ? "✅" : "⚠️"} {mensajePerfil.texto}
+                <div className={`fz-alert-${mensajePerfil.tipo === "exito" ? "success" : "error"}`} style={{ marginTop: "16px" }}>
+                  {mensajePerfil.texto}
                 </div>
               )}
 
-              <div className="fz-form-actions" style={{ marginTop: "20px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <div className="fz-form-actions">
                 <button type="submit" className="fz-btn-primary" disabled={guardandoPerfil}>
-                  {guardandoPerfil ? "Guardando cambios..." : "Guardar Cambios"}
+                  {guardandoPerfil ? "Guardando..." : "Actualizar Datos"}
                 </button>
                 <button
                   type="button"
                   className="fz-btn-outline"
                   onClick={() => setMostrarModalRecuperar(true)}
-                  title="Cambiar contraseña solicitando un código PIN de verificación a tu correo"
                 >
-                  🔒 Cambiar Contraseña con PIN de Correo
+                  Cambiar Contraseña
                 </button>
               </div>
             </form>
+
+            <div style={{ marginTop: "24px" }}>
+              <h4>Foto de Perfil</h4>
+              <p style={{ fontSize: "12px", color: "#64748b" }}>Sube una foto personalizada para tu carnet de jugador (Máx 2MB).</p>
+              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  onChange={handleSubirFoto}
+                />
+                <button
+                  type="button"
+                  className="fz-btn-outline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Seleccionar Imagen
+                </button>
+                {avatarUrl && (
+                  <button type="button" className="fz-btn-danger-sm" onClick={eliminarFoto}>
+                    Quitar Foto
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </main>
 
-      {/* Modal Ticket de Reserva Imprimible */}
+      {/* Modal de Comprobante Oficial */}
       {reservaParaTicket && (
         <TicketReservaModal
           reserva={reservaParaTicket}
@@ -797,10 +627,10 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
         />
       )}
 
-      {/* Modal Cambio de Contraseña por PIN */}
+      {/* Modal de Cambio de Clave */}
       {mostrarModalRecuperar && (
         <RecuperarPasswordModal
-          emailInicial={usuario?.email || ""}
+          emailInicial={usuario?.email}
           onClose={() => setMostrarModalRecuperar(false)}
           onSuccessLogin={() => setMostrarModalRecuperar(false)}
         />
