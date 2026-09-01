@@ -147,6 +147,20 @@ export const api = {
       method: "POST",
       body: JSON.stringify(datos),
     }),
+  actualizarEmpleado: (id: number, datos: any) =>
+    request<any>(`/empleados/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(datos),
+    }),
+  eliminarEmpleado: (id: number) =>
+    request<any>(`/empleados/${id}`, { method: "DELETE" }),
+
+  // Usuarios / Clientes
+  actualizarUsuario: (id: number, datos: any) =>
+    request<any>(`/usuarios/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(datos),
+    }),
 
   // Reportes
   obtenerResumenReportes: () => request<any>("/reportes/resumen"),

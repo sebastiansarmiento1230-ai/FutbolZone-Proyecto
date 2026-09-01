@@ -169,7 +169,8 @@ function Registro({ onRegisterSuccess, onSwitchToLogin, onGoHome }: RegistroProp
             <img
               src="/logo-futbolzone.png"
               alt="Logo FutbolZone"
-              style={{ width: "70px", height: "70px", objectFit: "contain" }}
+              className="fz-brand-logo-emblem"
+              style={{ width: "72px", height: "72px" }}
             />
           </div>
           <span className="fz-brand-pill-tag">Registro de Cliente</span>

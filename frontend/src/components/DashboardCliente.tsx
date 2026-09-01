@@ -202,7 +202,8 @@ function DashboardCliente({ usuario, onLogout, onGoToBooking }: DashboardCliente
           <img
             src="/logo-futbolzone.png"
             alt="FutbolZone"
-            style={{ width: "32px", height: "32px", objectFit: "contain" }}
+            className="fz-brand-logo-emblem"
+            style={{ width: "36px", height: "36px" }}
           />
           <strong style={{ fontSize: "14px", color: "#ffffff", letterSpacing: "0.5px" }}>FUTBOLZONE</strong>
         </div>

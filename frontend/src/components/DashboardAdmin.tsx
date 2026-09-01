@@ -16,6 +16,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [cargando, setCargando] = useState<boolean>(true);
+  const [feedbackMsg, setFeedbackMsg] = useState<{ texto: string; tipo: "exito" | "error" } | null>(null);
 
   // Filtro de Reservas
   const [filtroEstadoReserva, setFiltroEstadoReserva] = useState<string>("todas");
@@ -24,7 +25,6 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
   const [tituloAnuncio, setTituloAnuncio] = useState<string>("PROMO NOCTURNA 10% OFF");
   const [mensajeAnuncio, setMensajeAnuncio] = useState<string>("Aprovecha 10% de descuento en reservas nocturnas los jueves ingresando el cupón SENA20");
   const [anuncioActivo, setAnuncioActivo] = useState<boolean>(true);
-  const [mensajeAnuncioConfirm, setMensajeAnuncioConfirm] = useState<string | null>(null);
 
   // Formulario de Nueva Cancha
   const [nuevaCancha, setNuevaCancha] = useState({
@@ -36,6 +36,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
     descripcion: "",
   });
   const [mostrarFormCancha, setMostrarFormCancha] = useState<boolean>(false);
+  const [canchaParaEditar, setCanchaParaEditar] = useState<any | null>(null);
 
   // Formulario de Nuevo Empleado
   const [nuevoEmpleado, setNuevoEmpleado] = useState({
@@ -46,6 +47,22 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
     email: "",
   });
   const [mostrarFormEmpleado, setMostrarFormEmpleado] = useState<boolean>(false);
+  const [empleadoParaEditar, setEmpleadoParaEditar] = useState<any | null>(null);
+
+  // Formulario de Nueva Reserva desde Admin
+  const [mostrarFormReservaAdmin, setMostrarFormReservaAdmin] = useState<boolean>(false);
+  const [nuevaReservaAdmin, setNuevaReservaAdmin] = useState({
+    cancha_id: 1,
+    fecha: new Date().toISOString().split("T")[0],
+    hora_inicio: "18:00:00",
+    hora_fin: "19:00:00",
+    precio_total: 50000,
+    metodo_pago: "Efectivo",
+    notas: "Reserva registrada directamente por Administración",
+  });
+
+  // Modal para editar usuario
+  const [usuarioParaEditar, setUsuarioParaEditar] = useState<any | null>(null);
 
   // Período de Métricas
   const [periodoMetricas, setPeriodoMetricas] = useState<"semana" | "mes" | "ano">("mes");
@@ -54,6 +71,11 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
   useEffect(() => {
     cargarDatosAdmin();
   }, []);
+
+  const mostrarAlerta = (texto: string, tipo: "exito" | "error" = "exito") => {
+    setFeedbackMsg({ texto, tipo });
+    setTimeout(() => setFeedbackMsg(null), 4000);
+  };
 
   const cargarDatosAdmin = async () => {
     setCargando(true);
@@ -76,11 +98,15 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
     }
   };
 
+  /* ══════════════════════════════════════════
+     CRUD 1: CANCHAS
+     ══════════════════════════════════════════ */
   const manejarCrearCancha = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const res = await api.crearCancha(nuevaCancha);
       if (res.success) {
+        mostrarAlerta(`¡Cancha "${nuevaCancha.nombre}" creada correctamente!`);
         setMostrarFormCancha(false);
         setNuevaCancha({
           nombre: "",
@@ -90,26 +116,89 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           direccion: "Calle 63 # 28-45, Sede Central (El Campín)",
           descripcion: "",
         });
+        notificarAdmin({
+          titulo: "Cancha Registrada",
+          mensaje: `Se ha añadido la cancha ${nuevaCancha.nombre} (${nuevaCancha.tipo}) a la base de datos.`,
+          tipo: "sistema",
+        });
         cargarDatosAdmin();
       }
     } catch (err: any) {
-      alert("Error al registrar cancha: " + err.message);
+      mostrarAlerta("Error al registrar cancha: " + err.message, "error");
     }
   };
 
-  const manejarCrearEmpleado = async (e: React.FormEvent) => {
+  const manejarActualizarCancha = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canchaParaEditar) return;
     try {
-      if (api.crearEmpleado) {
-        const res = await api.crearEmpleado(nuevoEmpleado);
-        if (res.success) {
-          setMostrarFormEmpleado(false);
-          setNuevoEmpleado({ nombre: "", apellido: "", cargo: "Coordinador de Sede", telefono: "", email: "" });
-          cargarDatosAdmin();
-        }
+      const res = await api.actualizarCancha(canchaParaEditar.id, {
+        nombre: canchaParaEditar.nombre,
+        tipo: canchaParaEditar.tipo,
+        precio_hora: Number(canchaParaEditar.precio_hora),
+        capacidad_jugadores: Number(canchaParaEditar.capacidad_jugadores || canchaParaEditar.capacidad),
+        direccion: canchaParaEditar.direccion,
+        descripcion: canchaParaEditar.descripcion,
+        activa: canchaParaEditar.activa !== false,
+      });
+      if (res.success) {
+        mostrarAlerta(`Cancha "${canchaParaEditar.nombre}" actualizada con éxito.`);
+        setCanchaParaEditar(null);
+        cargarDatosAdmin();
       }
     } catch (err: any) {
-      alert("Error al registrar empleado: " + err.message);
+      mostrarAlerta("Error actualizando cancha: " + err.message, "error");
+    }
+  };
+
+  const toggleEstadoCancha = async (cancha: any) => {
+    const nuevoEstado = !(cancha.activa !== false);
+    try {
+      await api.actualizarCancha(cancha.id, { activa: nuevoEstado });
+      mostrarAlerta(`Estado de "${cancha.nombre}" cambiado a: ${nuevoEstado ? "Habilitada" : "En Mantenimiento"}`);
+      cargarDatosAdmin();
+    } catch (err: any) {
+      mostrarAlerta("Error al modificar estado: " + err.message, "error");
+    }
+  };
+
+  const eliminarCancha = async (id: number) => {
+    if (!confirm("¿Confirma la desactivación / eliminación de esta cancha?")) return;
+    try {
+      await api.eliminarCancha(id);
+      mostrarAlerta("Cancha eliminada / desactivada.");
+      cargarDatosAdmin();
+    } catch (err: any) {
+      mostrarAlerta("Error: " + err.message, "error");
+    }
+  };
+
+  /* ══════════════════════════════════════════
+     CRUD 2: RESERVAS
+     ══════════════════════════════════════════ */
+  const manejarCrearReservaAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await api.crearReserva({
+        cancha_id: Number(nuevaReservaAdmin.cancha_id),
+        fecha: nuevaReservaAdmin.fecha,
+        hora_inicio: nuevaReservaAdmin.hora_inicio,
+        hora_fin: nuevaReservaAdmin.hora_fin,
+        precio_total: Number(nuevaReservaAdmin.precio_total),
+        notas: `Pago: ${nuevaReservaAdmin.metodo_pago.toUpperCase()} | ${nuevaReservaAdmin.notas}`,
+      });
+      if (res.success) {
+        mostrarAlerta("¡Reserva agendada exitosamente desde Administración!");
+        setMostrarFormReservaAdmin(false);
+        notificarAdmin({
+          titulo: "Reserva Creada por Admin",
+          mensaje: `Se agendó turno en cancha ID #${nuevaReservaAdmin.cancha_id} para el ${nuevaReservaAdmin.fecha}.`,
+          tipo: "reserva",
+        });
+        cargarDatosAdmin();
+      }
+    } catch (err: any) {
+      mostrarAlerta("Error al agendar reserva: " + err.message, "error");
     }
   };
 
@@ -143,12 +232,6 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             tipo: "reserva",
             accionVista: "client_dashboard",
           });
-          notificarAdmin({
-            titulo: "Partido Liquidado",
-            mensaje: `La reserva #${id} (${nomCancha}) ha sido completada y liquidada.`,
-            tipo: "reserva",
-            accionVista: "admin_dashboard",
-          });
         } else if (nuevoEstado === "cancelada") {
           notificarCliente(usuarioId, {
             titulo: "Reserva Cancelada",
@@ -163,34 +246,21 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             accionVista: "admin_dashboard",
           });
         }
+        mostrarAlerta(`Estado de reserva #${id} actualizado a ${nuevoEstado.toUpperCase()}.`);
       }
       cargarDatosAdmin();
     } catch (err: any) {
-      alert("Error actualizando estado: " + err.message);
+      mostrarAlerta("Error actualizando estado: " + err.message, "error");
     }
   };
 
-  const cambiarMetodoPago = (id: number, metodo: string) => {
+  const cambiarMetodoPago = async (id: number, metodo: string) => {
     setReservas(reservas.map((r) => (r.id === id ? { ...r, metodo_pago: metodo } : r)));
-  };
-
-  const toggleEstadoCancha = async (cancha: any) => {
-    const nuevoEstado = !(cancha.activa !== false);
     try {
-      await api.actualizarCancha(cancha.id, { activa: nuevoEstado });
-      cargarDatosAdmin();
-    } catch (err: any) {
-      alert("Error al modificar estado de la cancha: " + err.message);
-    }
-  };
-
-  const eliminarCancha = async (id: number) => {
-    if (!confirm("¿Confirma la eliminación del registro de esta cancha?")) return;
-    try {
-      await api.eliminarCancha(id);
-      cargarDatosAdmin();
-    } catch (err: any) {
-      alert("Error: " + err.message);
+      await api.actualizarReserva(id, { metodo_pago: metodo });
+      mostrarAlerta(`Método de pago de reserva #${id} cambiado a ${metodo}.`);
+    } catch {
+      // guardado local fallback
     }
   };
 
@@ -229,6 +299,108 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
     XLSX.writeFile(workbook, `Reporte_Reservas_FutbolZone_${fechaHoy}.xlsx`);
   };
 
+  /* ══════════════════════════════════════════
+     CRUD 3: EMPLEADOS / PERSONAL
+     ══════════════════════════════════════════ */
+  const manejarCrearEmpleado = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (api.crearEmpleado) {
+        const res = await api.crearEmpleado(nuevoEmpleado);
+        if (res.success) {
+          mostrarAlerta(`Personal ${nuevoEmpleado.nombre} ${nuevoEmpleado.apellido} registrado exitosamente.`);
+          setMostrarFormEmpleado(false);
+          setNuevoEmpleado({ nombre: "", apellido: "", cargo: "Coordinador de Sede", telefono: "", email: "" });
+          notificarAdmin({
+            titulo: "Personal Registrado",
+            mensaje: `Se ha añadido a ${nuevoEmpleado.nombre} (${nuevoEmpleado.cargo}) al staff.`,
+            tipo: "sistema",
+          });
+          cargarDatosAdmin();
+        }
+      }
+    } catch (err: any) {
+      mostrarAlerta("Error al registrar empleado: " + err.message, "error");
+    }
+  };
+
+  const manejarActualizarEmpleado = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!empleadoParaEditar) return;
+    try {
+      if (api.actualizarEmpleado) {
+        const res = await api.actualizarEmpleado(empleadoParaEditar.id, {
+          nombre: empleadoParaEditar.nombre,
+          apellido: empleadoParaEditar.apellido,
+          cargo: empleadoParaEditar.cargo,
+          telefono: empleadoParaEditar.telefono,
+          activo: empleadoParaEditar.activo !== false,
+        });
+        if (res.success) {
+          mostrarAlerta(`Empleado ${empleadoParaEditar.nombre} actualizado correctamente.`);
+          setEmpleadoParaEditar(null);
+          cargarDatosAdmin();
+        }
+      }
+    } catch (err: any) {
+      mostrarAlerta("Error actualizando empleado: " + err.message, "error");
+    }
+  };
+
+  const eliminarEmpleado = async (id: number) => {
+    if (!confirm("¿Deseas dar de baja a este miembro del personal?")) return;
+    try {
+      if (api.eliminarEmpleado) {
+        await api.eliminarEmpleado(id);
+        mostrarAlerta("Empleado desactivado del sistema.");
+        cargarDatosAdmin();
+      }
+    } catch (err: any) {
+      mostrarAlerta("Error: " + err.message, "error");
+    }
+  };
+
+  /* ══════════════════════════════════════════
+     CRUD 4: USUARIOS / CLIENTES
+     ══════════════════════════════════════════ */
+  const toggleEstadoUsuario = async (u: any) => {
+    const nuevoEstado = !(u.activo !== false);
+    try {
+      if (api.actualizarUsuario) {
+        await api.actualizarUsuario(u.id, { activo: nuevoEstado });
+        mostrarAlerta(`Usuario "${u.nombre}" marcado como: ${nuevoEstado ? "ACTIVO" : "INACTIVO"}`);
+        cargarDatosAdmin();
+      }
+    } catch (err: any) {
+      mostrarAlerta("Error modificando usuario: " + err.message, "error");
+    }
+  };
+
+  const manejarActualizarUsuario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!usuarioParaEditar) return;
+    try {
+      if (api.actualizarUsuario) {
+        const res = await api.actualizarUsuario(usuarioParaEditar.id, {
+          nombre: usuarioParaEditar.nombre,
+          apellido: usuarioParaEditar.apellido,
+          telefono: usuarioParaEditar.telefono,
+          activo: usuarioParaEditar.activo !== false,
+        });
+        if (res.success) {
+          mostrarAlerta(`Cliente "${usuarioParaEditar.nombre}" actualizado.`);
+          setUsuarioParaEditar(null);
+          cargarDatosAdmin();
+        }
+      }
+    } catch (err: any) {
+      mostrarAlerta("Error: " + err.message, "error");
+    }
+  };
+
+  /* ══════════════════════════════════════════
+     CRUD 5: ANUNCIOS Y COMUNICADOS
+     ══════════════════════════════════════════ */
   const guardarAnuncioGlobal = (e: React.FormEvent) => {
     e.preventDefault();
     if (onPublicarAnuncio) {
@@ -242,8 +414,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
         mensaje: mensajeAnuncio,
         tipo: "promocion",
       });
-      setMensajeAnuncioConfirm("El comunicado ha sido actualizado y publicado en toda la plataforma.");
-      setTimeout(() => setMensajeAnuncioConfirm(null), 3500);
+      mostrarAlerta("El comunicado ha sido actualizado y publicado en toda la plataforma.");
     }
   };
 
@@ -306,14 +477,15 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
       {/* ── BARRA LATERAL (SIDEBAR CORPORATIVO) ── */}
       <aside className="fz-sidebar">
         <div className="fz-sidebar-user">
-          <div className="fz-avatar-halo" style={{ background: "transparent", boxShadow: "none", width: "auto", height: "auto" }}>
+          <div className="fz-avatar-halo" style={{ background: "transparent", boxShadow: "none", width: "auto", height: "auto", display: "flex", justifyContent: "center" }}>
             <img
               src="/logo-futbolzone.png"
               alt="Logo FutbolZone"
-              style={{ width: "68px", height: "68px", objectFit: "contain", margin: "0 auto 8px" }}
+              className="fz-brand-logo-emblem"
+              style={{ width: "68px", height: "68px" }}
             />
           </div>
-          <h3 className="fz-user-name">ADMINISTRACIÓN</h3>
+          <h3 className="fz-user-name" style={{ marginTop: "10px" }}>ADMINISTRACIÓN</h3>
           <p className="fz-user-email">admin@futbolzone.com</p>
           <span className="fz-user-badge">ROL ADMINISTRADOR</span>
         </div>
@@ -332,7 +504,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             className={`fz-nav-item ${tabActiva === "canchas" ? "active" : ""}`}
             onClick={() => setTabActiva("canchas")}
           >
-            <span className="fz-nav-label">Canchas ({canchas.length})</span>
+            <span className="fz-nav-label">Gestión Canchas ({canchas.length})</span>
           </button>
 
           <button
@@ -340,7 +512,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             className={`fz-nav-item ${tabActiva === "reservas" ? "active" : ""}`}
             onClick={() => setTabActiva("reservas")}
           >
-            <span className="fz-nav-label">Reservas ({reservas.length})</span>
+            <span className="fz-nav-label">Control Reservas ({reservas.length})</span>
           </button>
 
           <button
@@ -348,7 +520,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
             className={`fz-nav-item ${tabActiva === "usuarios" ? "active" : ""}`}
             onClick={() => setTabActiva("usuarios")}
           >
-            <span className="fz-nav-label">Directorio de Clientes ({usuarios.length})</span>
+            <span className="fz-nav-label">Directorio Clientes ({usuarios.length})</span>
           </button>
 
           <button
@@ -399,7 +571,17 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                 className="fz-btn-primary"
                 onClick={() => setMostrarFormCancha(!mostrarFormCancha)}
               >
-                {mostrarFormCancha ? "Cancelar" : "+ Registrar Cancha"}
+                {mostrarFormCancha ? "✕ Cancelar" : "+ Registrar Cancha"}
+              </button>
+            )}
+
+            {tabActiva === "reservas" && (
+              <button
+                type="button"
+                className="fz-btn-primary"
+                onClick={() => setMostrarFormReservaAdmin(!mostrarFormReservaAdmin)}
+              >
+                {mostrarFormReservaAdmin ? "✕ Cancelar" : "+ Crear Reserva"}
               </button>
             )}
 
@@ -409,7 +591,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                 className="fz-btn-primary"
                 onClick={() => setMostrarFormEmpleado(!mostrarFormEmpleado)}
               >
-                {mostrarFormEmpleado ? "Cancelar" : "+ Registrar Personal"}
+                {mostrarFormEmpleado ? "✕ Cancelar" : "+ Registrar Personal"}
               </button>
             )}
 
@@ -419,10 +601,15 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           </div>
         </header>
 
+        {feedbackMsg && (
+          <div className={`fz-client-banner-alert ${feedbackMsg.tipo === "error" ? "error" : ""}`} style={{ marginBottom: "20px" }}>
+            <span>{feedbackMsg.texto}</span>
+          </div>
+        )}
+
         {/* ── VISTA 1: MÉTRICAS Y DASHBOARD EJECUTIVO ── */}
         {tabActiva === "metricas" && (
           <div className="fz-dashboard-view">
-            {/* Selector de Período Temporal */}
             <div className="fz-time-filter-container">
               <span className="fz-time-label">Período de Análisis:</span>
               <div className="fz-time-pills">
@@ -450,7 +637,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
               </div>
             </div>
 
-            {/* 1. Tarjetas KPI Ejecutivas */}
+            {/* Tarjetas KPI */}
             <div className="fz-kpi-grid">
               <div className="fz-kpi-card fz-kpi-highlight">
                 <div className="fz-kpi-top">
@@ -458,7 +645,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                   <span className="fz-kpi-badge-pill">{subtituloPeriodo}</span>
                 </div>
                 <div className="fz-kpi-value">${totalIngresos.toLocaleString("es-CO")} COP</div>
-                <div className="fz-kpi-sub">Ingresos netos por turnos y servicios adicionales</div>
+                <div className="fz-kpi-sub">Ingresos netos por turnos y adicionales</div>
               </div>
 
               <div className="fz-kpi-card">
@@ -489,10 +676,9 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
               </div>
             </div>
 
-            {/* 2. Gráficos Ejecutivos */}
+            {/* Gráficos Ejecutivos */}
             <div className="fz-charts-grid">
               <div className="fz-charts-left">
-                {/* Gráfico de Barras */}
                 <div className="fz-widget-card">
                   <div className="fz-widget-header">
                     <div>
@@ -533,7 +719,6 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                   </div>
                 </div>
 
-                {/* Gráfico de Ondas de Ocupación + Calendario */}
                 <div className="fz-widget-card fz-wave-calendar-card">
                   <div className="fz-wave-section">
                     <h4 className="fz-section-title">Distribución de Horarios Pico</h4>
@@ -603,7 +788,6 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                 </div>
               </div>
 
-              {/* Columna Derecha: Ocupación Donut */}
               <div className="fz-charts-right">
                 <div className="fz-widget-card fz-donut-widget">
                   <h3 className="fz-widget-title">Ocupación de Canchas</h3>
@@ -673,9 +857,10 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           </div>
         )}
 
-        {/* ── VISTA 2: GESTIÓN DE CANCHAS ── */}
+        {/* ── VISTA 2: GESTIÓN DE CANCHAS (CRUD COMPLETO) ── */}
         {tabActiva === "canchas" && (
           <div className="fz-subview-card">
+            {/* Formulario Crear */}
             {mostrarFormCancha && (
               <form onSubmit={manejarCrearCancha} className="fz-form-inline">
                 <h3>Registrar Nueva Cancha Sintética</h3>
@@ -750,38 +935,140 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
               </form>
             )}
 
+            {/* Modal Editar Cancha */}
+            {canchaParaEditar && (
+              <div className="fz-floating-auth-backdrop" onClick={() => setCanchaParaEditar(null)}>
+                <div className="fz-floating-auth-card" style={{ maxWidth: "560px" }} onClick={(e) => e.stopPropagation()}>
+                  <div className="fz-floating-card-header">
+                    <button type="button" className="fz-btn-modal-close-corner" onClick={() => setCanchaParaEditar(null)}>✕</button>
+                    <h2>Editar Cancha: {canchaParaEditar.nombre}</h2>
+                    <p>Actualiza la tarifa, dirección y especificaciones técnicas</p>
+                  </div>
+                  <div className="fz-floating-card-body">
+                    <form onSubmit={manejarActualizarCancha} className="fz-pro-form">
+                      <div className="fz-pro-row-2">
+                        <div className="fz-pro-field">
+                          <label>Nombre de la Cancha *</label>
+                          <input
+                            type="text"
+                            value={canchaParaEditar.nombre}
+                            onChange={(e) => setCanchaParaEditar({ ...canchaParaEditar, nombre: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="fz-pro-field">
+                          <label>Tipo de Cancha *</label>
+                          <select
+                            value={canchaParaEditar.tipo}
+                            onChange={(e) => setCanchaParaEditar({ ...canchaParaEditar, tipo: e.target.value })}
+                          >
+                            <option value="Fútbol 5">Fútbol 5</option>
+                            <option value="Fútbol 7">Fútbol 7</option>
+                            <option value="Fútbol 11">Fútbol 11</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="fz-pro-row-2">
+                        <div className="fz-pro-field">
+                          <label>Precio por Hora (COP) *</label>
+                          <input
+                            type="number"
+                            value={canchaParaEditar.precio_hora}
+                            onChange={(e) => setCanchaParaEditar({ ...canchaParaEditar, precio_hora: Number(e.target.value) })}
+                            required
+                          />
+                        </div>
+                        <div className="fz-pro-field">
+                          <label>Capacidad Jugadores</label>
+                          <input
+                            type="number"
+                            value={canchaParaEditar.capacidad_jugadores || canchaParaEditar.capacidad || 10}
+                            onChange={(e) => setCanchaParaEditar({ ...canchaParaEditar, capacidad_jugadores: Number(e.target.value) })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="fz-pro-field">
+                        <label>Dirección / Sede Física</label>
+                        <input
+                          type="text"
+                          value={canchaParaEditar.direccion || ""}
+                          onChange={(e) => setCanchaParaEditar({ ...canchaParaEditar, direccion: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="fz-pro-field">
+                        <label>Descripción</label>
+                        <textarea
+                          rows={2}
+                          value={canchaParaEditar.descripcion || ""}
+                          onChange={(e) => setCanchaParaEditar({ ...canchaParaEditar, descripcion: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="fz-checkbox-row" style={{ margin: "10px 0" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={canchaParaEditar.activa !== false}
+                            onChange={(e) => setCanchaParaEditar({ ...canchaParaEditar, activa: e.target.checked })}
+                          />
+                          <span>Cancha Habilitada y disponible para reservas</span>
+                        </label>
+                      </div>
+
+                      <div className="fz-form-actions">
+                        <button type="submit" className="fz-btn-submit-gradient">Guardar Cambios</button>
+                        <button type="button" className="fz-btn-outline" onClick={() => setCanchaParaEditar(null)}>Cancelar</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Listado de Canchas */}
             <div className="fz-canchas-grid-cards">
               {canchas.map((c) => (
                 <div key={c.id} className="fz-cancha-card">
                   <div className="fz-cancha-badge">{c.tipo}</div>
                   <h4>{c.nombre}</h4>
-                  <div className="fz-cancha-address">{c.direccion || "Calle 63 # 28-45, Sede Central"}</div>
+                  <div className="fz-cancha-address">📍 {c.direccion || "Calle 63 # 28-45, Sede Central"}</div>
                   <p className="fz-cancha-desc">{c.descripcion || "Cancha sintética profesional con césped certificado."}</p>
                   
                   <div className="fz-cancha-meta">
                     <div>
-                      <span className="fz-meta-label">Precio / Hora:</span>
+                      <span className="fz-meta-label">Tarifa / Hora:</span>
                       <strong>${Number(c.precio_hora).toLocaleString("es-CO")} COP</strong>
                     </div>
                     <div>
                       <span className="fz-meta-label">Capacidad:</span>
-                      <strong>{c.capacidad_jugadores || 10} participantes</strong>
+                      <strong>{c.capacidad_jugadores || c.capacidad || 10} jugadores</strong>
                     </div>
                   </div>
 
-                  <div className="fz-cancha-footer">
+                  <div className="fz-cancha-footer" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                     <button
                       type="button"
                       className={`fz-btn-toggle-cancha ${c.activa !== false ? "activa" : "inactiva"}`}
                       onClick={() => toggleEstadoCancha(c)}
                     >
-                      {c.activa !== false ? "Habilitada (Activa)" : "En Mantenimiento"}
+                      {c.activa !== false ? "Habilitada" : "Mantenimiento"}
+                    </button>
+                    <button
+                      type="button"
+                      className="fz-btn-sm"
+                      onClick={() => setCanchaParaEditar(c)}
+                      title="Editar información de la cancha"
+                    >
+                      Editar
                     </button>
                     <button
                       type="button"
                       className="fz-btn-danger-sm"
                       onClick={() => eliminarCancha(c.id)}
-                      title="Eliminar registro"
+                      title="Eliminar cancha"
                     >
                       Eliminar
                     </button>
@@ -792,9 +1079,96 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           </div>
         )}
 
-        {/* ── VISTA 3: GESTIÓN DE RESERVAS ── */}
+        {/* ── VISTA 3: GESTIÓN DE RESERVAS (CRUD COMPLETO) ── */}
         {tabActiva === "reservas" && (
           <div className="fz-subview-card">
+            {/* Formulario Crear Reserva desde Admin */}
+            {mostrarFormReservaAdmin && (
+              <form onSubmit={manejarCrearReservaAdmin} className="fz-form-inline">
+                <h3>Agendar Nueva Reserva Manual (Taquilla / Administración)</h3>
+                <div className="fz-form-grid">
+                  <div className="fz-field">
+                    <label>Cancha *</label>
+                    <select
+                      value={nuevaReservaAdmin.cancha_id}
+                      onChange={(e) => setNuevaReservaAdmin({ ...nuevaReservaAdmin, cancha_id: Number(e.target.value) })}
+                    >
+                      {canchas.map((c) => (
+                        <option key={c.id} value={c.id}>{c.nombre} ({c.tipo}) - ${Number(c.precio_hora).toLocaleString("es-CO")}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="fz-field">
+                    <label>Fecha del Encuentro *</label>
+                    <input
+                      type="date"
+                      value={nuevaReservaAdmin.fecha}
+                      onChange={(e) => setNuevaReservaAdmin({ ...nuevaReservaAdmin, fecha: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="fz-field">
+                    <label>Hora Inicio *</label>
+                    <input
+                      type="time"
+                      value={nuevaReservaAdmin.hora_inicio.substring(0, 5)}
+                      onChange={(e) => setNuevaReservaAdmin({ ...nuevaReservaAdmin, hora_inicio: `${e.target.value}:00` })}
+                      required
+                    />
+                  </div>
+
+                  <div className="fz-field">
+                    <label>Hora Fin *</label>
+                    <input
+                      type="time"
+                      value={nuevaReservaAdmin.hora_fin.substring(0, 5)}
+                      onChange={(e) => setNuevaReservaAdmin({ ...nuevaReservaAdmin, hora_fin: `${e.target.value}:00` })}
+                      required
+                    />
+                  </div>
+
+                  <div className="fz-field">
+                    <label>Total Liquidado (COP) *</label>
+                    <input
+                      type="number"
+                      value={nuevaReservaAdmin.precio_total}
+                      onChange={(e) => setNuevaReservaAdmin({ ...nuevaReservaAdmin, precio_total: Number(e.target.value) })}
+                      required
+                    />
+                  </div>
+
+                  <div className="fz-field">
+                    <label>Método de Pago *</label>
+                    <select
+                      value={nuevaReservaAdmin.metodo_pago}
+                      onChange={(e) => setNuevaReservaAdmin({ ...nuevaReservaAdmin, metodo_pago: e.target.value })}
+                    >
+                      <option value="Efectivo">Efectivo en Taquilla</option>
+                      <option value="Nequi">Nequi</option>
+                      <option value="Daviplata">Daviplata</option>
+                      <option value="Tarjeta">Tarjeta Débito/Crédito</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="fz-field" style={{ marginTop: "12px" }}>
+                  <label>Notas / Detalles del Cliente</label>
+                  <input
+                    type="text"
+                    value={nuevaReservaAdmin.notas}
+                    onChange={(e) => setNuevaReservaAdmin({ ...nuevaReservaAdmin, notas: e.target.value })}
+                  />
+                </div>
+
+                <div className="fz-form-actions">
+                  <button type="submit" className="fz-btn-primary">Guardar Reserva</button>
+                  <button type="button" className="fz-btn-outline" onClick={() => setMostrarFormReservaAdmin(false)}>Cancelar</button>
+                </div>
+              </form>
+            )}
+
             <div className="fz-table-filters">
               <div className="fz-filters-left">
                 <span className="fz-filter-title">Estado:</span>
@@ -959,9 +1333,69 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           </div>
         )}
 
-        {/* ── VISTA 4: DIRECTO DE CLIENTES ── */}
+        {/* ── VISTA 4: DIRECTO DE CLIENTES (CRUD COMPLETO) ── */}
         {tabActiva === "usuarios" && (
           <div className="fz-subview-card">
+            {usuarioParaEditar && (
+              <div className="fz-floating-auth-backdrop" onClick={() => setUsuarioParaEditar(null)}>
+                <div className="fz-floating-auth-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="fz-floating-card-header">
+                    <button type="button" className="fz-btn-modal-close-corner" onClick={() => setUsuarioParaEditar(null)}>✕</button>
+                    <h2>Modificar Cliente: {usuarioParaEditar.nombre}</h2>
+                    <p>Actualiza datos del cliente o modifica su estado de acceso</p>
+                  </div>
+                  <div className="fz-floating-card-body">
+                    <form onSubmit={manejarActualizarUsuario} className="fz-pro-form">
+                      <div className="fz-pro-row-2">
+                        <div className="fz-pro-field">
+                          <label>Nombre *</label>
+                          <input
+                            type="text"
+                            value={usuarioParaEditar.nombre}
+                            onChange={(e) => setUsuarioParaEditar({ ...usuarioParaEditar, nombre: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="fz-pro-field">
+                          <label>Apellido *</label>
+                          <input
+                            type="text"
+                            value={usuarioParaEditar.apellido || ""}
+                            onChange={(e) => setUsuarioParaEditar({ ...usuarioParaEditar, apellido: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="fz-pro-field">
+                        <label>Teléfono</label>
+                        <input
+                          type="tel"
+                          value={usuarioParaEditar.telefono || ""}
+                          onChange={(e) => setUsuarioParaEditar({ ...usuarioParaEditar, telefono: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="fz-checkbox-row" style={{ margin: "10px 0" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={usuarioParaEditar.activo !== false}
+                            onChange={(e) => setUsuarioParaEditar({ ...usuarioParaEditar, activo: e.target.checked })}
+                          />
+                          <span>Cuenta activa y habilitada para reservas</span>
+                        </label>
+                      </div>
+
+                      <div className="fz-form-actions">
+                        <button type="submit" className="fz-btn-submit-gradient">Guardar Cambios</button>
+                        <button type="button" className="fz-btn-outline" onClick={() => setUsuarioParaEditar(null)}>Cancelar</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="fz-table-responsive">
               <table className="fz-data-table">
                 <thead>
@@ -972,6 +1406,7 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                     <th>Teléfono</th>
                     <th>Total Reservas</th>
                     <th>Estado de Cuenta</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -987,6 +1422,24 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                           {u.activo !== false ? "ACTIVO" : "INACTIVO"}
                         </span>
                       </td>
+                      <td>
+                        <div className="fz-action-btns">
+                          <button
+                            type="button"
+                            className="fz-btn-sm"
+                            onClick={() => setUsuarioParaEditar(u)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            className={u.activo !== false ? "fz-btn-action-cancel" : "fz-btn-action-confirm"}
+                            onClick={() => toggleEstadoUsuario(u)}
+                          >
+                            {u.activo !== false ? "Desactivar" : "Reactivar"}
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -995,9 +1448,10 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           </div>
         )}
 
-        {/* ── VISTA 5: EMPLEADOS / PERSONAL ── */}
+        {/* ── VISTA 5: EMPLEADOS / PERSONAL (CRUD COMPLETO) ── */}
         {tabActiva === "empleados" && (
           <div className="fz-subview-card">
+            {/* Formulario Crear Empleado */}
             {mostrarFormEmpleado && (
               <form onSubmit={manejarCrearEmpleado} className="fz-form-inline">
                 <h3>Registrar Nuevo Personal de Sede</h3>
@@ -1030,6 +1484,15 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                     />
                   </div>
                   <div className="fz-field">
+                    <label>Correo Electrónico *</label>
+                    <input
+                      type="email"
+                      value={nuevoEmpleado.email}
+                      onChange={(e) => setNuevoEmpleado({ ...nuevoEmpleado, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="fz-field">
                     <label>Teléfono de Contacto</label>
                     <input
                       type="tel"
@@ -1045,6 +1508,68 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
               </form>
             )}
 
+            {/* Modal Editar Empleado */}
+            {empleadoParaEditar && (
+              <div className="fz-floating-auth-backdrop" onClick={() => setEmpleadoParaEditar(null)}>
+                <div className="fz-floating-auth-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="fz-floating-card-header">
+                    <button type="button" className="fz-btn-modal-close-corner" onClick={() => setEmpleadoParaEditar(null)}>✕</button>
+                    <h2>Editar Personal: {empleadoParaEditar.nombre}</h2>
+                    <p>Actualiza la función y datos de contacto</p>
+                  </div>
+                  <div className="fz-floating-card-body">
+                    <form onSubmit={manejarActualizarEmpleado} className="fz-pro-form">
+                      <div className="fz-pro-row-2">
+                        <div className="fz-pro-field">
+                          <label>Nombre *</label>
+                          <input
+                            type="text"
+                            value={empleadoParaEditar.nombre}
+                            onChange={(e) => setEmpleadoParaEditar({ ...empleadoParaEditar, nombre: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="fz-pro-field">
+                          <label>Apellido *</label>
+                          <input
+                            type="text"
+                            value={empleadoParaEditar.apellido}
+                            onChange={(e) => setEmpleadoParaEditar({ ...empleadoParaEditar, apellido: e.target.value })}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="fz-pro-field">
+                        <label>Cargo / Rol *</label>
+                        <input
+                          type="text"
+                          value={empleadoParaEditar.cargo}
+                          onChange={(e) => setEmpleadoParaEditar({ ...empleadoParaEditar, cargo: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="fz-pro-field">
+                        <label>Teléfono</label>
+                        <input
+                          type="tel"
+                          value={empleadoParaEditar.telefono || ""}
+                          onChange={(e) => setEmpleadoParaEditar({ ...empleadoParaEditar, telefono: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="fz-form-actions">
+                        <button type="submit" className="fz-btn-submit-gradient">Guardar Cambios</button>
+                        <button type="button" className="fz-btn-outline" onClick={() => setEmpleadoParaEditar(null)}>Cancelar</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Listado de Empleados */}
             <div className="fz-canchas-grid-cards">
               {empleados.map((emp) => (
                 <div key={emp.id} className="fz-cancha-card">
@@ -1056,6 +1581,27 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
                       <span className="fz-meta-label">Teléfono:</span>
                       <strong>{emp.telefono || "3001234567"}</strong>
                     </div>
+                    <div>
+                      <span className="fz-meta-label">Correo:</span>
+                      <strong>{emp.email || "staff@futbolzone.com"}</strong>
+                    </div>
+                  </div>
+
+                  <div className="fz-cancha-footer" style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      type="button"
+                      className="fz-btn-sm"
+                      onClick={() => setEmpleadoParaEditar(emp)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      className="fz-btn-danger-sm"
+                      onClick={() => eliminarEmpleado(emp.id)}
+                    >
+                      Dar de Baja
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1063,11 +1609,11 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
           </div>
         )}
 
-        {/* ── VISTA 6: COMUNICADOS EN VIVO ── */}
+        {/* ── VISTA 6: COMUNICADOS EN VIVO (CRUD) ── */}
         {tabActiva === "anuncios" && (
           <div className="fz-subview-card">
             <form onSubmit={guardarAnuncioGlobal} className="fz-form-inline">
-              <h3>Publicar Comunicado en Vivo</h3>
+              <h3>Publicar / Modificar Comunicado en Vivo</h3>
               <p className="fz-form-subtitle">
                 Este mensaje se desplegará en la barra superior de la plataforma para todos los usuarios.
               </p>
@@ -1093,24 +1639,29 @@ function DashboardAdmin({ onLogout, onPublicarAnuncio }: DashboardAdminProps) {
               </div>
 
               <div className="fz-checkbox-row" style={{ marginTop: "15px" }}>
-                <label>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
                   <input
                     type="checkbox"
                     checked={anuncioActivo}
                     onChange={(e) => setAnuncioActivo(e.target.checked)}
-                  />{" "}
-                  Mostrar de inmediato en el banner de la plataforma
+                  />
+                  <span>Mostrar de inmediato en el banner de la plataforma</span>
                 </label>
               </div>
 
-              {mensajeAnuncioConfirm && (
-                <div className="fz-alert-success" style={{ marginTop: "15px" }}>
-                  {mensajeAnuncioConfirm}
-                </div>
-              )}
-
               <div className="fz-form-actions">
                 <button type="submit" className="fz-btn-primary">Publicar Comunicado</button>
+                <button
+                  type="button"
+                  className="fz-btn-outline"
+                  onClick={() => {
+                    setAnuncioActivo(false);
+                    if (onPublicarAnuncio) onPublicarAnuncio({ titulo: "", mensaje: "", activo: false });
+                    mostrarAlerta("Comunicado retirado de la plataforma.");
+                  }}
+                >
+                  Desactivar Comunicado
+                </button>
               </div>
             </form>
           </div>

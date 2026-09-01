@@ -119,7 +119,8 @@ function TicketReservaModal({ reserva, usuario, onClose }: TicketReservaModalPro
             <img
               src="/logo-futbolzone.png"
               alt="Logo FutbolZone"
-              style={{ width: "52px", height: "52px", objectFit: "contain", marginBottom: "6px" }}
+              className="fz-brand-logo-emblem"
+              style={{ width: "56px", height: "56px", marginBottom: "6px" }}
             />
             <h2>FutbolZone</h2>
             <span className="ticket-badge-official">COMPROBANTE OFICIAL DE RESERVA</span>

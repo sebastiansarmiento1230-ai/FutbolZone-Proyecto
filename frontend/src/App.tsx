@@ -152,7 +152,8 @@ function App() {
               <img
                 src="/logo-futbolzone.png"
                 alt="Logo FutbolZone"
-                style={{ width: "38px", height: "38px", objectFit: "contain", borderRadius: "8px" }}
+                className="fz-brand-logo-emblem"
+                style={{ width: "40px", height: "40px" }}
               />
               <h1 style={{ margin: 0 }}>Futbol<span>Zone</span></h1>
             </div>
@@ -385,7 +386,8 @@ function App() {
           <img
             src="/logo-futbolzone.png"
             alt="FutbolZone"
-            style={{ width: "48px", height: "48px", objectFit: "contain", borderRadius: "10px" }}
+            className="fz-brand-logo-emblem"
+            style={{ width: "52px", height: "52px" }}
           />
           <p>© 2026 FutbolZone · Sistema de Gestión Deportiva.</p>
           <p>Proyecto Formativo SENA ADSO III Trimestre · Nicolas Felipe Paz Ortiz</p>
