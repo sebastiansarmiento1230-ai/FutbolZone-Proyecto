@@ -136,7 +136,11 @@ function ReservaCancha({ cancha, onGoBack, onReservationCreated, onRequireLogin 
         fecha: fecha,
         hora_inicio: bloqueSeleccionado.inicio,
         hora_fin: hFinCalculada,
-        notas: `Pago: ${metodoPago.toUpperCase()} ${referenciaPago ? `(Ref: ${referenciaPago})` : ''} | Jugadores: ${numJugadores} | Kit: ${incluyeBalonPetos ? 'Sí' : 'No'} | Árbitro: ${incluyeArbitro ? 'Sí' : 'No'} | Cupón: ${cuponAplicado || 'Ninguno'}`
+        precio_total: totalPagar,
+        incluye_kit: incluyeBalonPetos,
+        incluye_arbitro: incluyeArbitro,
+        descuento: montoDescuento,
+        notas: `Pago: ${metodoPago.toUpperCase()} ${referenciaPago ? `(Ref: ${referenciaPago})` : ''} | Jugadores: ${numJugadores} | Kit: ${incluyeBalonPetos ? 'Sí (+$15.000)' : 'No'} | Árbitro: ${incluyeArbitro ? 'Sí (+$30.000)' : 'No'} | Cupón: ${cuponAplicado || 'Ninguno'}`
       });
 
       if (res.success) {
@@ -189,6 +193,10 @@ function ReservaCancha({ cancha, onGoBack, onReservationCreated, onRequireLogin 
             <div className="fz-hstat">
               <span>Capacidad Recomendada</span>
               <strong>{capInicial} Jugadores</strong>
+            </div>
+            <div className="fz-hstat">
+              <span>Ubicación de la Sede</span>
+              <strong style={{ fontSize: "13px" }}>{cancha?.direccion || (cancha?.nombre?.includes("Norte") ? "Cra. 15 # 104-20, Sede Norte" : cancha?.nombre?.includes("Sur") ? "Av. Boyacá # 45-12 Sur, Sede Sur" : "Calle 63 # 28-45, Sede Central")}</strong>
             </div>
             <div className="fz-hstat">
               <span>Iluminación</span>
@@ -476,6 +484,12 @@ function ReservaCancha({ cancha, onGoBack, onReservationCreated, onRequireLogin 
                 <div className="fz-rline">
                   <span>Cancha:</span>
                   <strong>{cancha?.nombre || "Cancha Central"}</strong>
+                </div>
+                <div className="fz-rline">
+                  <span>Sede:</span>
+                  <strong style={{ fontSize: "11.5px", color: "#334155", textAlign: "right" }}>
+                    📍 {cancha?.direccion || (cancha?.nombre?.includes("Norte") ? "Cra. 15 # 104-20 (Sede Norte)" : cancha?.nombre?.includes("Sur") ? "Av. Boyacá # 45-12 Sur (Sede Sur)" : "Calle 63 # 28-45 (Sede Central)")}
+                  </strong>
                 </div>
                 <div className="fz-rline">
                   <span>Fecha:</span>

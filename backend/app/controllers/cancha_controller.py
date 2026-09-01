@@ -22,6 +22,7 @@ def get_canchas(db: Session, solo_activas: bool = False):
             "capacidad": c.capacidad_jugadores,
             "iluminacion": c.tiene_iluminacion,
             "techo": c.tiene_techo,
+            "direccion": getattr(c, "direccion", "Calle 63 # 28-45, Sede Central (El Campín)"),
             "activa": c.activa
         }
         for c in canchas
@@ -37,7 +38,9 @@ def get_cancha(id: int, db: Session):
         "id": c.id, "nombre": c.nombre, "tipo": c.tipo,
         "descripcion": c.descripcion, "precio_hora": c.precio_hora,
         "capacidad": c.capacidad_jugadores,
-        "iluminacion": c.tiene_iluminacion, "techo": c.tiene_techo, "activa": c.activa
+        "iluminacion": c.tiene_iluminacion, "techo": c.tiene_techo,
+        "direccion": getattr(c, "direccion", "Calle 63 # 28-45, Sede Central (El Campín)"),
+        "activa": c.activa
     }
     return api_response(True, "Cancha encontrada", data=data)
 

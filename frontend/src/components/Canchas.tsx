@@ -115,6 +115,13 @@ function Canchas({ onSelectCancha }: CanchasProps) {
             const imgUrl = obtenerImagenCancha(cancha.nombre, cancha.tipo);
             const ratingVal = cancha.rating || 4.9;
             const resenasCount = cancha.resenas || 32;
+            const direccionCancha = cancha.direccion || (
+              cancha.nombre?.includes("Norte")
+                ? "Cra. 15 # 104-20, Sede Norte (Chicó Norte)"
+                : cancha.nombre?.includes("Sur")
+                ? "Av. Boyacá # 45-12 Sur, Sede Sur (El Tunal)"
+                : "Calle 63 # 28-45, Sede Central (El Campín)"
+            );
 
             return (
               <div className="cancha-card" key={cancha.id || cancha.nombre}>
@@ -125,6 +132,11 @@ function Canchas({ onSelectCancha }: CanchasProps) {
 
                 <div className="cancha-card-body">
                   <h3>{cancha.nombre}</h3>
+
+                  <div className="cancha-direccion-badge" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#64748b", margin: "4px 0 8px" }}>
+                    <Icons.MapPin size={14} color="#10b981" />
+                    <span>{direccionCancha}</span>
+                  </div>
 
                   <button
                     type="button"

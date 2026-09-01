@@ -109,7 +109,17 @@ export const api = {
     request<any>(`/canchas/${id}`, { method: "DELETE" }),
 
   // Reservas
-  crearReserva: (datos: { cancha_id: number; fecha: string; hora_inicio: string; hora_fin: string; notas?: string }) =>
+  crearReserva: (datos: {
+    cancha_id: number;
+    fecha: string;
+    hora_inicio: string;
+    hora_fin: string;
+    precio_total?: number;
+    incluye_kit?: boolean;
+    incluye_arbitro?: boolean;
+    descuento?: number;
+    notas?: string;
+  }) =>
     request<any>("/reservas/", {
       method: "POST",
       body: JSON.stringify(datos),

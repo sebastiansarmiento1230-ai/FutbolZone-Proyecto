@@ -63,11 +63,19 @@ def create_reserva(body: ReservaSchema, usuario_id: int, db: Session):
     if conflicto:
         return api_response(False, "La cancha ya está reservada en ese horario", error="Conflict")
 
-    # Calcular precio automáticamente
-    inicio_dt = datetime.combine(datetime.today(), body.hora_inicio)
-    fin_dt    = datetime.combine(datetime.today(), body.hora_fin)
-    horas     = (fin_dt - inicio_dt).seconds / 3600
-    precio    = round(horas * cancha.precio_hora, 2)
+    # Calcular precio automáticamente con soporte para kit y árbitro
+    if body.precio_total is not None and body.precio_total > 0:
+        precio = float(body.precio_total)
+    else:
+        inicio_dt = datetime.combine(datetime.today(), body.hora_inicio)
+        fin_dt    = datetime.combine(datetime.today(), body.hora_fin)
+        horas     = (fin_dt - inicio_dt).seconds / 3600
+        costo_cancha = horas * cancha.precio_hora
+        extra_kit = 15000 if (body.incluye_kit or (body.notas and 'Kit: Sí' in body.notas)) else 0
+        extra_arbitro = 30000 if (body.incluye_arbitro or (body.notas and 'Árbitro: Sí' in body.notas)) else 0
+        descuento = body.descuento if body.descuento else 0
+        precio = max(costo_cancha + extra_kit + extra_arbitro - descuento, 0)
+    precio = round(precio, 2)
 
     nueva = ReservaModel(
         usuario_id=usuario_id,

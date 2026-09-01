@@ -23,6 +23,7 @@ class CanchaModel(Base):
     precio_hora         = Column(Float, nullable=False)
     tiene_iluminacion   = Column(Boolean, default=False)
     tiene_techo         = Column(Boolean, default=False)
+    direccion           = Column(String(200), default="Sede Central — Calle 63 # 28-45")
     activa              = Column(Boolean, default=True)
     creado_en           = Column(DateTime, server_default=func.now())
 
