@@ -373,8 +373,13 @@ function App() {
           </div>
         </section>
 
-        {/* UBICACIÓN Y MAPA GOOGLE MAPS */}
-        <UbicacionMapa />
+        {/* UBICACIÓN Y MAPA INTERACTIVO CON TRAZADOR DE RUTAS */}
+        <UbicacionMapa
+          onSelectCancha={(cancha) => {
+            setCanchaParaReservar(cancha);
+            setVista("reserva");
+          }}
+        />
       </main>
 
       {/* BOTÓN FLOTANTE WHATSAPP */}
