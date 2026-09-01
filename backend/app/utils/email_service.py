@@ -414,7 +414,7 @@ def send_password_reset_pin_email(to_email: str, nombre: str, pin: str) -> bool:
         print(f"   Para que llegue a tu bandeja de Gmail real, configura")
         print(f"   SMTP_USER y SMTP_PASSWORD en el archivo 'backend/.env'.")
         print(f"=======================================================\n")
-        return True
+        return False
 
     try:
         msg = MIMEMultipart("alternative")

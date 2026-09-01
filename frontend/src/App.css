@@ -632,6 +632,16 @@ footer {
   border-color: #10b981;
 }
 
+.app-main-wrapper.dark-mode footer {
+  background: #040e09;
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-mode {
+  background-color: #06150e;
+  color: #f1f5f9;
+}
+
 /* RESPONSIVE */
 @media (max-width: 900px) {
   .hero-stats-bar { grid-template-columns: repeat(2, 1fr); gap: 15px; }
@@ -644,4 +654,143 @@ footer {
   .header-zone { padding: 12px 18px; }
   .hero-stats-bar { grid-template-columns: 1fr; margin-top: -20px; }
   .beneficios-grid { grid-template-columns: 1fr; }
+}
+
+/* ===================================================
+   📱 MODO CELULAR / SMARTPHONE INTERACTIVO SIMULADO
+   =================================================== */
+
+.app-device-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  transition: background 0.3s ease;
+}
+
+/* Cuando el modo celular está activo en pantallas grandes/desktop */
+.app-device-wrapper.sim-mobile-active {
+  background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 70%, #020617 100%);
+  padding: 30px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.app-device-wrapper.sim-mobile-active .fz-screen-viewport {
+  width: 414px;
+  max-width: 100%;
+  min-height: 840px;
+  background: #ffffff;
+  border-radius: 46px;
+  border: 11px solid #1e293b;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6),
+              0 0 0 2px rgba(255, 255, 255, 0.1),
+              inset 0 0 0 2px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-device-wrapper.sim-mobile-active.dark-mode .fz-screen-viewport {
+  background: #06150e;
+  border-color: #0d2e20;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8),
+              0 0 25px rgba(16, 185, 129, 0.2);
+}
+
+/* Dynamic Island / Notch superior del celular */
+.fz-phone-top-notch {
+  width: 120px;
+  height: 24px;
+  background: #090d16;
+  border-radius: 0 0 16px 16px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 999;
+  position: sticky;
+  top: 0;
+}
+
+.fz-phone-camera-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #111c2e;
+  border: 1px solid #1e293b;
+}
+
+.fz-phone-speaker-bar {
+  width: 38px;
+  height: 4px;
+  border-radius: 3px;
+  background: #1e293b;
+}
+
+/* Barra inferior del celular / Home indicator */
+.fz-phone-bottom-notch {
+  height: 22px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: sticky;
+  bottom: 0;
+  z-index: 999;
+}
+
+.fz-phone-home-indicator {
+  width: 110px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 4px;
+}
+
+.app-device-wrapper.sim-mobile-active.dark-mode .fz-phone-home-indicator {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Ajustes de contenido dentro del marco de celular */
+.app-device-wrapper.sim-mobile-active .app-main-wrapper {
+  overflow-y: auto;
+  max-height: 820px;
+  border-radius: 0;
+}
+
+.app-device-wrapper.sim-mobile-active .header-zone {
+  padding: 10px 14px;
+}
+
+.app-device-wrapper.sim-mobile-active .logo h1 {
+  font-size: 18px;
+}
+
+.app-device-wrapper.sim-mobile-active .navegacion ul {
+  gap: 6px;
+}
+
+.app-device-wrapper.sim-mobile-active .nav-link {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.app-device-wrapper.sim-mobile-active .hero-stats-bar {
+  grid-template-columns: 1fr;
+  margin-top: -15px;
+}
+
+.app-device-wrapper.sim-mobile-active .beneficios-grid {
+  grid-template-columns: 1fr;
+}
+
+.app-device-wrapper.sim-mobile-active .quienes-grid {
+  grid-template-columns: 1fr;
+}
+
+.app-device-wrapper.sim-mobile-active .whatsapp-float-btn {
+  bottom: 30px;
+  right: 14px;
 }

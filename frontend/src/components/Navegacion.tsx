@@ -3,11 +3,9 @@ import "./Navegacion.css";
 interface NavegacionProps {
   usuario?: any;
   onNavigateToDashboard?: () => void;
-  tema?: "claro" | "oscuro";
-  onToggleTema?: () => void;
 }
 
-function Navegacion({ usuario, onNavigateToDashboard, tema = "claro", onToggleTema }: NavegacionProps) {
+function Navegacion({ usuario, onNavigateToDashboard }: NavegacionProps) {
   return (
     <nav className="navegacion">
       <ul>
@@ -26,18 +24,6 @@ function Navegacion({ usuario, onNavigateToDashboard, tema = "claro", onToggleTe
         <li>
           <a href="#ubicacion" className="nav-link">Ubicación</a>
         </li>
-        {onToggleTema && (
-          <li>
-            <button
-              type="button"
-              className={`btn-theme-toggle ${tema === "oscuro" ? "dark" : ""}`}
-              onClick={onToggleTema}
-              title={`Cambiar a modo ${tema === "claro" ? "oscuro" : "claro"}`}
-            >
-              <span className="theme-text">{tema === "claro" ? "Modo Oscuro" : "Modo Claro"}</span>
-            </button>
-          </li>
-        )}
         {usuario && onNavigateToDashboard && (
           <li className="nav-dashboard-item">
             <button className="nav-dashboard-btn" onClick={onNavigateToDashboard}>

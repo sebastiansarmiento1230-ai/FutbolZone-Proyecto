@@ -1,0 +1,196 @@
+/* ===================================================
+   FUTBOLZONE — PANEL LATERAL CLÁSICO DE 3 BOTONES (ICONOS LIMPIOS)
+   1. ☀️ / 🌙 Modo Claro y Oscuro
+   2. 💻 Modo Computador (Escritorio)
+   3. 📱 Modo Celular (Móvil)
+   =================================================== */
+
+/* ── CONTENEDOR ANCLADO A LA DERECHA (Centrado Vertical) ── */
+.fz-floating-dock {
+  position: fixed;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 998;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: inherit;
+  transition: transform 0.3s ease;
+}
+
+/* ── CÁPSULA FLOTANTE ELEGANTE ── */
+.fz-dock-capsule {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35),
+              0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.theme-light .fz-dock-capsule {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(203, 213, 225, 0.8);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1),
+              0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+/* ── BOTONES DE ICONO INDIVIDUALES ── */
+.fz-dock-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.dock-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.25s ease, color 0.25s ease, filter 0.25s ease;
+}
+
+.fz-dock-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.08);
+}
+
+.theme-light .fz-dock-btn:hover {
+  color: #0f172a;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.fz-dock-btn:active {
+  transform: scale(0.92);
+}
+
+/* ── ☀️ / 🌙 BOTÓN DE TEMA (CLARO / OSCURO) ── */
+.btn-theme.is-light {
+  color: #f59e0b;
+}
+
+.btn-theme.is-light:hover .icon-sun {
+  transform: rotate(45deg) scale(1.1);
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+}
+
+.btn-theme.is-dark {
+  color: #34d399;
+}
+
+.btn-theme.is-dark:hover .icon-moon {
+  transform: rotate(-15deg) scale(1.1);
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.7));
+}
+
+/* ── 💻 BOTÓN COMPUTADOR (PC) ── */
+.btn-computer.is-active {
+  color: #ffffff;
+  background: #3b82f6;
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.theme-light .btn-computer.is-active {
+  color: #ffffff;
+  background: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+/* ── 📱 BOTÓN CELULAR (MÓVIL) ── */
+.btn-mobile.is-active {
+  color: #ffffff;
+  background: #10b981;
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.theme-light .btn-mobile.is-active {
+  color: #ffffff;
+  background: #059669;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+/* ── SEPARADOR SUTIL ── */
+.fz-dock-sep {
+  width: 22px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 1px 0;
+}
+
+.theme-light .fz-dock-sep {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* ── TOOLTIP FLOTANTE A LA IZQUIERDA ── */
+.fz-dock-tooltip {
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-light .fz-dock-tooltip {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.fz-dock-tooltip.is-visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ── RESPONSIVE PARA DISPOSITIVOS MÓVILES REALES ── */
+@media (max-width: 600px) {
+  .fz-floating-dock {
+    right: 8px;
+  }
+
+  .fz-dock-capsule {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .fz-dock-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .dock-icon {
+    width: 18px;
+    height: 18px;
+  }
+}

@@ -65,20 +65,24 @@ def _seed_db():
 
             canchas = [
                 CanchaModel(nombre="Cancha Central", tipo="Fútbol 5", descripcion="Cancha principal con césped sintético premium", capacidad_jugadores=10, precio_hora=50000.0, tiene_iluminacion=True, tiene_techo=False),
-                CanchaModel(nombre="Cancha Norte", tipo="Fútbol 7", descripcion="Cancha amplia con iluminación LED de alta potencia", capacidad_jugadores=14, precio_hora=70000.0, tiene_iluminacion=True, tiene_techo=False),
-                CanchaModel(nombre="Cancha Sur", tipo="Fútbol 11", descripcion="Cancha reglamentaria profesional", capacidad_jugadores=22, precio_hora=100000.0, tiene_iluminacion=True, tiene_techo=True),
+                CanchaModel(nombre="Cancha Norte", tipo="Fútbol 7", descripcion="Cancha amplia con iluminación LED de foco nocturno", capacidad_jugadores=14, precio_hora=70000.0, tiene_iluminacion=True, tiene_techo=False),
+                CanchaModel(nombre="Cancha Sur", tipo="Fútbol 11", descripcion="Cancha reglamentaria profesional para torneos", capacidad_jugadores=22, precio_hora=100000.0, tiene_iluminacion=True, tiene_techo=True),
+                CanchaModel(nombre="Cancha Este", tipo="Fútbol 5", descripcion="Cancha sintética compacta con cubierta", capacidad_jugadores=10, precio_hora=45000.0, tiene_iluminacion=False, tiene_techo=True),
+                CanchaModel(nombre="Cancha Oeste", tipo="Fútbol 7", descripcion="Cancha techada con iluminación LED y graderías", capacidad_jugadores=14, precio_hora=65000.0, tiene_iluminacion=True, tiene_techo=True),
             ]
             db.add_all(canchas)
 
             empleados = [
                 EmpleadoModel(nombre="Juan", apellido="Pérez", cargo="Administrador", telefono="3001234567", email="juan.perez@futbolzone.com"),
                 EmpleadoModel(nombre="María", apellido="González", cargo="Coordinador", telefono="3109876543", email="maria.gonzalez@futbolzone.com"),
-                EmpleadoModel(nombre="Pedro", apellido="Ramírez", cargo="Mantenimiento", telefono="3205556677", email="pedro.ramirez@futbolzone.com")
+                EmpleadoModel(nombre="Pedro", apellido="Ramírez", cargo="Mantenimiento", telefono="3205556677", email="pedro.ramirez@futbolzone.com"),
+                EmpleadoModel(nombre="Sofía", apellido="Torres", cargo="Atención al cliente", telefono="3154443322", email="sofia.torres@futbolzone.com"),
+                EmpleadoModel(nombre="Carlos", apellido="Vargas", cargo="Seguridad", telefono="3001112233", email="carlos.vargas@futbolzone.com"),
             ]
             db.add_all(empleados)
 
             db.commit()
-            print("[DB] Datos iniciales sembrados con éxito (Admin: admin@futbolzone.com / admin123).")
+            print("[DB] Datos iniciales sembrados con éxito en SQLite.")
     except Exception as e:
         print(f"[DB Error] Error al sembrar datos iniciales: {e}")
         db.rollback()

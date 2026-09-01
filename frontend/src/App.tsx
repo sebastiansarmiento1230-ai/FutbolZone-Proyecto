@@ -14,6 +14,7 @@ import NotificacionesPill from "./components/NotificacionesPill";
 import UbicacionMapa from "./components/UbicacionMapa";
 import AnuncioBanner from "./components/AnuncioBanner";
 import TablonRetos from "./components/TablonRetos";
+import ThemeJoystick from "./components/ThemeJoystick";
 import Icons from "./components/Icons";
 import { getStoredUser, removeAuthToken } from "./services/api";
 
@@ -36,6 +37,9 @@ function App() {
     return (localStorage.getItem("futbolzone_tema") as "claro" | "oscuro") || "claro";
   });
 
+  // Estado del Modo de Visualización (Computador / Celular)
+  const [modoDispositivo, setModoDispositivo] = useState<"computador" | "celular">("computador");
+
   useEffect(() => {
     const userGuardado = getStoredUser();
     if (userGuardado) {
@@ -43,8 +47,23 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (tema === "oscuro") {
+      document.documentElement.classList.add("dark-mode");
+      document.body.classList.add("dark-mode");
+    } else {
+      document.documentElement.classList.remove("dark-mode");
+      document.body.classList.remove("dark-mode");
+    }
+  }, [tema]);
+
   const toggleTema = () => {
     const nuevoTema = tema === "claro" ? "oscuro" : "claro";
+    setTema(nuevoTema);
+    localStorage.setItem("futbolzone_tema", nuevoTema);
+  };
+
+  const setTemaManual = (nuevoTema: "claro" | "oscuro") => {
     setTema(nuevoTema);
     localStorage.setItem("futbolzone_tema", nuevoTema);
   };
@@ -135,23 +154,31 @@ function App() {
   }
 
   return (
-    <div className={`app-main-wrapper ${tema === "oscuro" ? "dark-mode" : ""}`}>
-      {/* ANUNCIO GLOBAL DEL ADMIN */}
-      <AnuncioBanner anuncio={anuncioGlobal} />
+    <div className={`app-device-wrapper ${tema === "oscuro" ? "dark-mode" : ""} ${modoDispositivo === "celular" ? "sim-mobile-active" : "sim-desktop-active"}`}>
+      {/* Marco de celular interactivo (si está en modo celular) */}
+      <div className="fz-screen-viewport">
+        {modoDispositivo === "celular" && (
+          <div className="fz-phone-top-notch">
+            <div className="fz-phone-camera-dot" />
+            <div className="fz-phone-speaker-bar" />
+          </div>
+        )}
 
-      {/* HEADER */}
-      <header className="header-zone">
-        <div className="logo" onClick={() => setVista("landing")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
-          <Icons.Ball size={26} color="#10b981" />
-          <h1 style={{ margin: 0 }}>Futbol<span>Zone</span></h1>
-        </div>
+        <div className={`app-main-wrapper ${tema === "oscuro" ? "dark-mode" : ""}`}>
+          {/* ANUNCIO GLOBAL DEL ADMIN */}
+          <AnuncioBanner anuncio={anuncioGlobal} />
 
-        <Navegacion
-          usuario={usuario}
-          onNavigateToDashboard={irADashboard}
-          tema={tema}
-          onToggleTema={toggleTema}
-        />
+          {/* HEADER */}
+          <header className="header-zone">
+            <div className="logo" onClick={() => setVista("landing")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Icons.Ball size={26} color="#10b981" />
+              <h1 style={{ margin: 0 }}>Futbol<span>Zone</span></h1>
+            </div>
+
+            <Navegacion
+              usuario={usuario}
+              onNavigateToDashboard={irADashboard}
+            />
 
         <div className="header-buttons" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           {/* Campanita de Notificaciones */}
@@ -378,6 +405,24 @@ function App() {
         </div>
       </footer>
     </div>
+
+    {/* Barra inferior del marco de celular (si está activo) */}
+    {modoDispositivo === "celular" && (
+      <div className="fz-phone-bottom-notch">
+        <div className="fz-phone-home-indicator" />
+      </div>
+    )}
+  </div>
+
+  {/* 🕹️ PANEL LATERAL ARCADE CLÁSICO (3 BOTONES: TEMA JOYSTICK + MODO PC + MODO MÓVIL) */}
+  <ThemeJoystick
+    tema={tema}
+    onToggleTema={toggleTema}
+    onSetTema={setTemaManual}
+    modoDispositivo={modoDispositivo}
+    onCambiarModoDispositivo={setModoDispositivo}
+  />
+</div>
   );
 }
 

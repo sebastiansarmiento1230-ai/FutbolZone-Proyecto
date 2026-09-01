@@ -36,8 +36,15 @@ function Canchas({ onSelectCancha }: CanchasProps) {
     setCargando(true);
     try {
       const res = await api.obtenerCanchas(false);
-      if (res.success && Array.isArray(res.data)) {
-        setCanchas(res.data);
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        const mapa = new Map();
+        res.data.forEach((c: any) => {
+          const clave = c.id || c.nombre;
+          if (!mapa.has(clave)) {
+            mapa.set(clave, c);
+          }
+        });
+        setCanchas(Array.from(mapa.values()));
       } else {
         setCanchas([
           { id: 1, nombre: "Cancha Fútbol 5", tipo: "Fútbol 5", descripcion: "Ideal para partidos rápidos y divertidos entre amigos.", precio_hora: 50000, capacidad: 10, activa: true, rating: 4.9, resenas: 38 },

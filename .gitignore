@@ -29,3 +29,4 @@ backend/.env
 Thumbs.db
 .vscode/
 .idea/
+~$*.xlsx

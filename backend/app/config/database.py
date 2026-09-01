@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
@@ -6,39 +6,26 @@ import os
 
 load_dotenv()
 
-DB_HOST     = os.getenv("DB_HOST", "localhost")
-DB_PORT     = os.getenv("DB_PORT", "3306")
-DB_USER     = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_NAME     = os.getenv("DB_NAME", "futbolzone")
+# Ruta absoluta al archivo SQLite en backend/futbolzone.db
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DB_PATH = os.path.join(BASE_DIR, "futbolzone.db")
+SQLITE_URL = f"sqlite:///{DB_PATH}"
 
-MYSQL_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-SQLITE_URL = "sqlite:///./futbolzone.db"
+print(f"[DB] Conectado directamente a SQLite nativo: {DB_PATH}")
 
-def _get_engine():
-    # Intentar conexión MySQL primero si está configurada
-    try:
-        engine = create_engine(
-            MYSQL_URL,
-            pool_pre_ping=True,
-            pool_recycle=300,
-            echo=False,
-            connect_args={"connect_timeout": 1}
-        )
-        # Probar conexión
-        with engine.connect() as conn:
-            pass
-        print("[DB] Conectado exitosamente a la base de datos MySQL.")
-        return engine
-    except Exception:
-        print("[DB Info] Usando base de datos local SQLite (futbolzone.db)...")
-        return create_engine(
-            SQLITE_URL,
-            connect_args={"check_same_thread": False},
-            echo=False
-        )
+engine = create_engine(
+    SQLITE_URL,
+    connect_args={"check_same_thread": False},
+    echo=False
+)
 
-engine = _get_engine()
+# Habilitar soporte de claves foráneas (Foreign Keys) en SQLite
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -49,4 +36,3 @@ def get_db():
         yield db
     finally:
         db.close()
-

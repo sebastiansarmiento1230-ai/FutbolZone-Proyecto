@@ -77,6 +77,9 @@ function RecuperarPasswordModal({ emailInicial = "", onClose, onSuccessLogin }: 
     }
   };
 
+  const [pinDemo, setPinDemo] = useState<string | null>(null);
+  const [correoEnviadoReal, setCorreoEnviadoReal] = useState<boolean>(false);
+
   // Paso 1: Solicitar PIN al correo
   const handleSolicitarPin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +96,10 @@ function RecuperarPasswordModal({ emailInicial = "", onClose, onSuccessLogin }: 
       if (res.success) {
         setPaso("verificar");
         setSegundosRestantes(900);
+        if (res.data?.pin_demo) {
+          setPinDemo(res.data.pin_demo);
+        }
+        setCorreoEnviadoReal(Boolean(res.data?.correo_enviado_real));
       } else {
         setMensajeError(res.message || "Error al solicitar el código PIN.");
       }
@@ -221,8 +228,42 @@ function RecuperarPasswordModal({ emailInicial = "", onClose, onSuccessLogin }: 
               </div>
               <h2>Código de Verificación</h2>
               <p>
-                Enviamos un PIN a <strong>{email}</strong>. Ingrésalo a continuación junto con tu nueva clave.
+                {correoEnviadoReal
+                  ? `¡Correo enviado! Revisa la bandeja de entrada o spam de ${email}.`
+                  : `Generamos tu código PIN de seguridad de 6 dígitos.`}
               </p>
+
+              {pinDemo && (
+                <div
+                  style={{
+                    background: "rgba(16, 185, 129, 0.12)",
+                    border: "1px dashed #10b981",
+                    borderRadius: "10px",
+                    padding: "10px 14px",
+                    margin: "12px 0 6px",
+                    textAlign: "center",
+                  }}
+                >
+                  <div style={{ fontSize: "11px", color: "#6ee7b7", fontWeight: 700, textTransform: "uppercase" }}>
+                    PIN de Seguridad Generado
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "24px",
+                      letterSpacing: "6px",
+                      color: "#34d399",
+                      fontWeight: 900,
+                      fontFamily: "monospace",
+                      margin: "4px 0",
+                    }}
+                  >
+                    {pinDemo}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8" }}>
+                    (Para recibirlo directamente en tu Gmail, ingresa tus credenciales en <code>backend/.env</code>)
+                  </div>
+                </div>
+              )}
               
               <div className="fz-rec-timer-badge">
                 Expira en: <strong>{formatearTiempo(segundosRestantes)}</strong>
